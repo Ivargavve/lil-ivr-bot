@@ -1,6 +1,6 @@
 // Lil IVR Bot - Popup Chat Interface
 
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = window.LIL_IVR_CONFIG?.API_BASE_URL || 'http://localhost:8000';
 
 class LilIVRChat {
   constructor() {

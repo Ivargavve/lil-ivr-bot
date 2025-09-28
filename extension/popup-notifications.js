@@ -137,7 +137,8 @@ async function showNotificationPopup(message) {
 // Generate AI popup message (exactly like old version)
 async function generatePopupMessage() {
   try {
-    const response = await fetch('http://localhost:8000/chat', {
+    const API_BASE_URL = window.LIL_IVR_CONFIG?.API_BASE_URL || 'http://localhost:8000';
+    const response = await fetch(`${API_BASE_URL}/chat`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

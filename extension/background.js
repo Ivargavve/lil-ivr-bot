@@ -2,6 +2,10 @@
 
 console.log('Lil IVR Bot: Background script started!');
 
+// Configuration
+const API_BASE_URL = 'http://localhost:8000';
+// For production: const API_BASE_URL = 'https://your-app-name.onrender.com';
+
 // Store user activity and notification state
 let userState = {
   lastActiveTime: Date.now(),
@@ -112,7 +116,7 @@ async function sendPopupNotification() {
 async function sendChatMessage() {
   try {
     // Get random message from backend (includes song links)
-    const response = await fetch('http://localhost:8000/random-message');
+    const response = await fetch(`${API_BASE_URL}/random-message`);
     if (response.ok) {
       const data = await response.json();
       console.log('🎤 [BACKGROUND] Got chat message:', data.message);

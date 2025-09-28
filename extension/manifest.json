@@ -17,7 +17,7 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["popup-notifications.js"],
+      "js": ["config.js", "popup-notifications.js"],
       "run_at": "document_end"
     }
   ],
