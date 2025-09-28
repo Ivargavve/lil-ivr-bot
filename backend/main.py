@@ -5,6 +5,7 @@ from typing import List, Optional
 from openai import OpenAI
 import os
 import random
+import re
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -34,13 +35,29 @@ class ChatResponse(BaseModel):
     includes_lyric: bool = False
     lyric_line: Optional[str] = None
 
+def filter_urls_from_text(text):
+    """Remove URLs from text to prevent them from appearing in responses"""
+    # Remove http/https URLs
+    text = re.sub(r'https?://[^\s]+', '', text)
+    # Remove chrome:// URLs
+    text = re.sub(r'chrome://[^\s]+', '', text)
+    # Remove other protocol URLs
+    text = re.sub(r'\w+://[^\s]+', '', text)
+    # Clean up extra spaces
+    text = re.sub(r'\s+', ' ', text)
+    return text.strip()
+
 SYSTEM_PROMPT = """Du är "Lil IVR", en självsäker svensk SoundCloud-rapper. Du har en dryg, lite arrogant attityd. Dina personlighetsdrag:
 
 - Blanda svenska med engelska ofta
 - Använd inte emojis
-- Håll svar korta
-- Ofta gillar du att integrera en rad från dina låtar i konversationen
-- Lite attitude, som att du vet att du är bättre än andra"""
+- Håll svar MYCKET korta (max 1-2 meningar)
+- Svara direkt på frågan utan extra fluff
+- Lite attitude, som att du vet att du är bättre än andra
+- Använd ALDRIG bindestreck i meningar - skriv naturligt svenska istället
+- Hitta ALDRIG på låttexter - använd ENDAST rader som du faktiskt får tillgång till
+
+VIKTIGT: Skriv ALDRIG ut URL:er eller webbadresser i dina svar. Använd bara sidnamn eller beskrivningar istället."""
 
 def load_song_lyrics():
     import os
@@ -92,7 +109,7 @@ def get_random_lyric():
     return random.choice(song_lyrics)
 
 def should_include_lyric():
-    return random.randint(1, 5) == 1
+    return random.randint(1, 8) == 1
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat(chat_message: ChatMessage):
@@ -104,16 +121,25 @@ async def chat(chat_message: ChatMessage):
             context_prompt = f"\n\nWebbsidekontext: {chat_message.webpage_context[:500]}"
             print(f"🎤 [CHAT] Webpage context added: {chat_message.webpage_context[:100]}...")
 
-        user_message = chat_message.message + context_prompt
+        # Filter URLs from the message before processing
+        filtered_message = filter_urls_from_text(chat_message.message)
+        user_message = filtered_message + context_prompt
 
-        # Add lyric context to system prompt sometimes
-        include_lyric = should_include_lyric()
+        # Check if user is specifically asking for lyrics/quotes
+        asking_for_lyrics = any(word in filtered_message.lower() for word in
+                              ['quote', 'quotes', 'låt', 'låtar', 'text', 'rad', 'rader', 'lyric', 'lyrics'])
+
+        # Add lyric context to system prompt sometimes, or always if asking for lyrics
+        include_lyric = asking_for_lyrics or should_include_lyric()
         lyric_context = ""
         lyric_line = None
 
         if include_lyric:
             lyric_line = get_random_lyric()
-            lyric_context = f"\n\nDu kan naturligt integrera denna rad från en av dina låtar i svaret om det passar: '{lyric_line}'"
+            if asking_for_lyrics:
+                lyric_context = f"\n\nAnvändaren frågar om dina låtar. Du MÅSTE inkludera denna rad från en av dina låtar: '{lyric_line}' - presentera den som en riktig quote från dig och kombinera med ditt svar."
+            else:
+                lyric_context = f"\n\nDu kan naturligt integrera denna rad från en av dina låtar i svaret om det passar: '{lyric_line}'"
             print(f"🎤 [LYRIC] Adding lyric context: {lyric_line}")
 
         full_system_prompt = SYSTEM_PROMPT + lyric_context
@@ -131,11 +157,13 @@ async def chat(chat_message: ChatMessage):
         )
 
         bot_response = response.choices[0].message.content
+        # Filter URLs from bot response as additional safety measure
+        filtered_response = filter_urls_from_text(bot_response)
         print(f"🎤 [GPT] Received response: {bot_response}")
-        print(f"🎤 [CHAT] Final response: {bot_response}")
+        print(f"🎤 [CHAT] Final response: {filtered_response}")
 
         return ChatResponse(
-            response=bot_response,
+            response=filtered_response,
             includes_lyric=include_lyric,
             lyric_line=lyric_line
         )
@@ -175,6 +203,15 @@ async def analyze_webpage(webpage: WebpageAnalysis):
                 domain_analysis = "Twitter/X"
             elif "reddit" in webpage_url.lower():
                 domain_analysis = "Reddit"
+            elif "chrome://" in webpage_url.lower():
+                if "extensions" in webpage_url.lower():
+                    domain_analysis = "Chrome Extensions-sidan"
+                elif "settings" in webpage_url.lower():
+                    domain_analysis = "Chrome Settings"
+                elif "newtab" in webpage_url.lower():
+                    domain_analysis = "en ny flik"
+                else:
+                    domain_analysis = "Chrome-sidan"
             elif "tiktok" in webpage_url.lower():
                 domain_analysis = "TikTok"
             else:

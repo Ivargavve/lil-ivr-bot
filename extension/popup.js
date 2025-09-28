@@ -195,7 +195,6 @@ class LilIVRChat {
     } else {
       messageDiv.innerHTML = `
         <div class="message-bubble">${messageContent}</div>
-        <div class="message-avatar user-avatar">U</div>
       `;
     }
 
