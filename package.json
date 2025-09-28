@@ -1,0 +1,23 @@
+{
+  "name": "lil-ivr-bot",
+  "version": "1.0.0",
+  "description": "A goofy Swedish SoundCloud rapper chatbot Chrome extension",
+  "scripts": {
+    "build": "npm run clean && npm run build:extension",
+    "build:extension": "mkdir -p dist && cp extension/manifest.json extension/content.js extension/background.js extension/chatbot-app.js extension/chatbot.css extension/popup.html extension/popup.js dist/ && mkdir -p dist/assets && (cp -r extension/assets/* dist/assets/ 2>/dev/null || echo '# Icon assets would go here' > dist/assets/README.md)",
+    "start:backend": "cd backend && pip3 install -r requirements.txt && python3 -m uvicorn main:app --reload --host 0.0.0.0 --port 8000",
+    "dev": "cd frontend && npm start",
+    "install:frontend": "cd frontend && npm install",
+    "install:backend": "cd backend && pip3 install -r requirements.txt",
+    "test": "python3 testing/validate_setup.py && python3 testing/test_compatibility.py",
+    "clean": "rm -rf dist"
+  },
+  "keywords": ["chrome-extension", "chatbot", "swedish", "rapper", "ai"],
+  "author": "Lil IVR Bot Team",
+  "license": "MIT",
+  "devDependencies": {},
+  "engines": {
+    "node": ">=14.0.0",
+    "python": ">=3.8"
+  }
+}

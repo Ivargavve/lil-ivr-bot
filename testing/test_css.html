@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lil IVR Bot - CSS Test</title>
+    <link rel="stylesheet" href="extension/chatbot.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .demo-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .css-test {
+            border: 2px dashed #ccc;
+            padding: 20px;
+            margin: 10px 0;
+            background: #fafafa;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎨 Lil IVR Bot - CSS & UI Component Test</h1>
+
+    <div class="demo-section">
+        <h2>🎯 Minimized State</h2>
+        <div class="css-test">
+            <div class="lil-ivr-chatbot">
+                <div class="chatbot-minimized">
+                    <div class="profile-pic" style="width: 40px; height: 40px; font-size: 18px;">🎤</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="demo-section">
+        <h2>💬 Expanded Chat Interface</h2>
+        <div class="css-test">
+            <div class="lil-ivr-chatbot">
+                <div class="chatbot-expanded">
+                    <div class="chatbot-header">
+                        <div class="header-info">
+                            <div class="header-profile-pic">🎤</div>
+                            <div class="header-text">
+                                <p class="bot-name">Lil IVR</p>
+                                <p class="bot-status">🎤 Rapper & AI Assistant</p>
+                            </div>
+                        </div>
+                        <div>
+                            <button class="minimize-btn">−</button>
+                            <button class="close-btn">×</button>
+                        </div>
+                    </div>
+
+                    <div class="chat-messages">
+                        <!-- Bot message -->
+                        <div class="message bot">
+                            <div class="message-avatar" style="width: 25px; height: 25px; font-size: 12px;">🎤</div>
+                            <div class="message-bubble">
+                                Heyyo skibidi toe! Vad kan jag hjälpa dig med idag? 🔥
+                                <div class="lyric-highlight">
+                                    Btw, från min senaste track: 'Yo jag kör beats hela dagen, skibidi på repeat' 🎤
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- User message -->
+                        <div class="message user">
+                            <div class="message-bubble">Hej! Kan du hjälpa mig med denna sida?</div>
+                            <div class="message-avatar user-avatar">U</div>
+                        </div>
+
+                        <!-- Typing indicator -->
+                        <div class="message bot">
+                            <div class="message-avatar" style="width: 25px; height: 25px; font-size: 12px;">🎤</div>
+                            <div class="message-bubble">
+                                <div class="typing-indicator">
+                                    Lil IVR skriver...
+                                    <div class="typing-dots">
+                                        <div class="typing-dot"></div>
+                                        <div class="typing-dot"></div>
+                                        <div class="typing-dot"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chat-input-area">
+                        <div class="chat-input-container">
+                            <input
+                                type="text"
+                                placeholder="Skriv till Lil IVR..."
+                                class="chat-input"
+                                value="Test meddelande..."
+                            />
+                            <button type="button" class="send-btn">➤</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="demo-section">
+        <h2>🎨 Color & Animation Tests</h2>
+        <div class="css-test">
+            <h3>Gradient Tests</h3>
+            <div style="display: flex; gap: 10px; margin: 10px 0;">
+                <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #8B5CF6, #EC4899); border-radius: 50%;"></div>
+                <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #1F2937, #111827); border-radius: 8px;"></div>
+                <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #3B82F6, #1D4ED8); border-radius: 8px;"></div>
+            </div>
+
+            <h3>Typography Test</h3>
+            <div style="color: white; background: #1F2937; padding: 15px; border-radius: 8px;">
+                <p style="margin: 0; font-weight: bold;">Lil IVR Bot</p>
+                <p style="margin: 5px 0 0 0; font-size: 12px; opacity: 0.8;">🎤 Rapper & AI Assistant</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="demo-section">
+        <h2>📱 Responsive Test</h2>
+        <div class="css-test">
+            <p>Resize the browser window to test responsive behavior:</p>
+
+            <div style="width: 320px; margin: 0 auto; border: 1px solid #ccc;">
+                <div class="lil-ivr-chatbot" style="position: relative; bottom: auto; right: auto;">
+                    <div class="chatbot-expanded" style="height: 300px;">
+                        <div class="chatbot-header">
+                            <div class="header-info">
+                                <div class="header-profile-pic">🎤</div>
+                                <div class="header-text">
+                                    <p class="bot-name">Lil IVR</p>
+                                    <p class="bot-status">Mobile Test</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chat-messages" style="flex: 1;">
+                            <div class="message bot">
+                                <div class="message-avatar" style="width: 25px; height: 25px; font-size: 12px;">🎤</div>
+                                <div class="message-bubble">Responsive test! 📱</div>
+                            </div>
+                        </div>
+                        <div class="chat-input-area">
+                            <div class="chat-input-container">
+                                <input type="text" class="chat-input" placeholder="Test..." />
+                                <button class="send-btn">➤</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        console.log('🎨 CSS Test page loaded!');
+
+        // Test button interactions
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', function() {
+                console.log('Button clicked:', this.textContent);
+            });
+        });
+
+        // Test input interactions
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('focus', function() {
+                console.log('Input focused');
+            });
+        });
+    </script>
+</body>
+</html>

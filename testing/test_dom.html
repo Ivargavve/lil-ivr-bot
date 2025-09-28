@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lil IVR Bot - DOM Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .warning { background: #fff3cd; color: #856404; }
+        button {
+            background: #8B5CF6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #7C3AED;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎤 Lil IVR Bot - DOM Integration Test</h1>
+
+    <div class="test-section">
+        <h2>📦 Extension Loading Test</h2>
+        <p>This page tests if the Chrome extension can inject the chatbot properly.</p>
+
+        <div id="extension-status" class="status warning">
+            ⏳ Waiting for extension to load...
+        </div>
+
+        <button onclick="checkExtension()">🔍 Check Extension Status</button>
+        <button onclick="simulateWebpage()">🌐 Simulate Webpage Analysis</button>
+    </div>
+
+    <div class="test-section">
+        <h2>🎯 DOM Elements Test</h2>
+        <p>Testing if the chatbot can access different page elements:</p>
+
+        <h3>Test Page Content</h3>
+        <p>This is a test paragraph about technology and programming. The page contains various elements that should be analyzed by Lil IVR Bot.</p>
+
+        <h3>Navigation Links</h3>
+        <ul>
+            <li><a href="#test1">Test Link 1</a></li>
+            <li><a href="#test2">Test Link 2</a></li>
+        </ul>
+
+        <div id="dom-status" class="status warning">
+            📋 DOM analysis results will appear here...
+        </div>
+
+        <button onclick="analyzeDOM()">🔍 Analyze DOM Content</button>
+    </div>
+
+    <div class="test-section">
+        <h2>💬 Chatbot Interface Test</h2>
+        <p>Check if the chatbot interface appears and functions correctly:</p>
+
+        <div id="chatbot-status" class="status warning">
+            🤖 Chatbot status will appear here...
+        </div>
+
+        <button onclick="toggleChatbot()">💬 Toggle Chatbot</button>
+        <button onclick="testProactiveMessage()">📢 Test Proactive Message</button>
+    </div>
+
+    <div class="test-section">
+        <h2>🎨 Styling Test</h2>
+        <p>Preview of chatbot styling elements:</p>
+
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #8B5CF6, #EC4899); display: flex; align-items: center; justify-content: center; color: white; font-size: 20px;">🎤</div>
+            <div style="background: linear-gradient(135deg, #8B5CF6, #7C3AED); color: white; padding: 10px; border-radius: 15px; max-width: 200px;">
+                Heyyo skibidi toe! Detta är en test av meddelande styling! 🔥
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function checkExtension() {
+            const statusEl = document.getElementById('extension-status');
+
+            // Check if extension root exists
+            const extensionRoot = document.getElementById('lil-ivr-chatbot-root');
+            const chatbotEl = document.getElementById('lil-ivr-chatbot');
+
+            if (extensionRoot) {
+                statusEl.className = 'status success';
+                statusEl.innerHTML = '✅ Extension root found! Extension is loaded.';
+
+                if (chatbotEl) {
+                    statusEl.innerHTML += '<br>✅ Chatbot element also detected!';
+                }
+            } else {
+                statusEl.className = 'status error';
+                statusEl.innerHTML = '❌ Extension not detected. Make sure the extension is loaded and enabled.';
+            }
+        }
+
+        function analyzeDOM() {
+            const statusEl = document.getElementById('dom-status');
+
+            // Test page analysis function
+            if (window.lilIvrGetPageContext) {
+                const context = window.lilIvrGetPageContext();
+                statusEl.className = 'status success';
+                statusEl.innerHTML = `
+                    ✅ Page analysis function found!<br>
+                    📄 Title: ${context.title}<br>
+                    📝 Headings: ${context.headings.substring(0, 100)}...<br>
+                    🔗 URL: ${context.url}
+                `;
+            } else {
+                statusEl.className = 'status warning';
+                statusEl.innerHTML = '⚠️ Page analysis function not available. Extension may not be fully loaded.';
+            }
+        }
+
+        function simulateWebpage() {
+            const statusEl = document.getElementById('extension-status');
+            statusEl.innerHTML += '<br>📊 Simulating webpage analysis...';
+
+            // Simulate what the extension would analyze
+            const title = document.title;
+            const headings = Array.from(document.querySelectorAll('h1, h2, h3')).map(h => h.textContent).join(', ');
+
+            statusEl.innerHTML += `<br>📄 Would analyze: "${title}" with headings: "${headings}"`;
+        }
+
+        function toggleChatbot() {
+            const statusEl = document.getElementById('chatbot-status');
+
+            // Try to communicate with the extension
+            if (window.postMessage) {
+                window.postMessage({
+                    type: 'LIL_IVR_TEST_TOGGLE',
+                    action: 'toggle'
+                }, '*');
+
+                statusEl.className = 'status success';
+                statusEl.innerHTML = '✅ Toggle message sent to extension!';
+            } else {
+                statusEl.className = 'status error';
+                statusEl.innerHTML = '❌ Cannot communicate with extension.';
+            }
+        }
+
+        function testProactiveMessage() {
+            const statusEl = document.getElementById('chatbot-status');
+
+            if (window.postMessage) {
+                window.postMessage({
+                    type: 'LIL_IVR_PROACTIVE_MESSAGE',
+                    message: 'Yo bror, detta är ett test meddelande! 🎤🔥'
+                }, '*');
+
+                statusEl.className = 'status success';
+                statusEl.innerHTML = '✅ Proactive message sent!';
+            } else {
+                statusEl.className = 'status error';
+                statusEl.innerHTML = '❌ Cannot send proactive message.';
+            }
+        }
+
+        // Auto-check extension status on load
+        setTimeout(checkExtension, 2000);
+
+        // Listen for messages from extension
+        window.addEventListener('message', (event) => {
+            if (event.data.type === 'LIL_IVR_TEST_RESPONSE') {
+                const statusEl = document.getElementById('chatbot-status');
+                statusEl.className = 'status success';
+                statusEl.innerHTML = '✅ Received response from extension!';
+            }
+        });
+
+        console.log('🎤 Lil IVR Bot DOM Test Page loaded!');
+    </script>
+</body>
+</html>
