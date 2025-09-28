@@ -13,6 +13,9 @@
   let lastActiveTime = Date.now();
   let chatbotContainer = null;
   let initialGreetingSent = false;
+  let isPageVisible = true; // Track if page is visible/focused
+  let hasUnreadNotification = false; // Track if there's an unread notification
+  let notificationSent = false; // Track if notification has been sent in current cycle
 
   // Create the chatbot UI
   function createChatbotUI() {
@@ -225,11 +228,18 @@
   async function sendMessage(messageText, webpageContext = null) {
     if (!messageText.trim() && !webpageContext) return;
 
+    // Prepare conversation history BEFORE adding current message
+    const conversationHistory = messages.map(msg => ({
+      role: msg.isBot ? 'assistant' : 'user',
+      content: msg.text
+    }));
+
     addMessage(messageText || "Hej!", false);
     setTyping(true);
     setLoading(true);
 
     try {
+
       const response = await fetch(`${API_BASE_URL}/chat`, {
         method: 'POST',
         headers: {
@@ -237,7 +247,8 @@
         },
         body: JSON.stringify({
           message: messageText || "Hej!",
-          webpage_context: webpageContext
+          webpage_context: webpageContext,
+          conversation_history: conversationHistory
         })
       });
 
@@ -290,6 +301,21 @@
     isMinimized = minimized;
     updateChatbotUI();
 
+    // Send chat status to content script
+    window.postMessage({
+      type: 'LIL_IVR_CHAT_STATUS',
+      isOpen: !minimized && isVisible
+    }, '*');
+
+    // If opening chat, reset timer and clear notifications
+    if (!minimized) {
+      lastActiveTime = Date.now();
+      notificationSent = false;
+      hasUnreadNotification = false;
+      updateNotificationBadge();
+      console.log('🎤 Chat opened - reset timer and cleared notifications');
+    }
+
     // If opening chat for first time, send greeting
     if (!minimized && !initialGreetingSent) {
       setTimeout(() => analyzeWebpage(), 500);
@@ -301,6 +327,12 @@
     if (chatbotContainer) {
       chatbotContainer.style.display = visible ? 'block' : 'none';
     }
+
+    // Send chat status to content script
+    window.postMessage({
+      type: 'LIL_IVR_CHAT_STATUS',
+      isOpen: !isMinimized && visible
+    }, '*');
   }
 
   function setupProactiveMessaging() {
@@ -310,9 +342,16 @@
       chrome.runtime.sendMessage({ action: 'updateActivity' });
     };
 
+    // Track page visibility to prevent popups when alt-tabbed
+    const handleVisibilityChange = () => {
+      isPageVisible = !document.hidden;
+      console.log('🎤 Page visibility changed:', isPageVisible ? 'visible' : 'hidden');
+    };
+
     document.addEventListener('click', updateActivity);
     document.addEventListener('keypress', updateActivity);
     document.addEventListener('scroll', updateActivity);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     // Listen for proactive messages and direct open commands
     window.addEventListener('message', (event) => {
@@ -327,23 +366,58 @@
       }
     });
 
-    // Check for inactivity
+    // Check for inactivity and send notifications
     const inactivityInterval = setInterval(() => {
       const now = Date.now();
       const inactiveTime = now - lastActiveTime;
 
-      if (inactiveTime > 10 * 60 * 1000 && isMinimized) {
+      // Send notification after 10 minutes of inactivity (only once per cycle)
+      if (inactiveTime > 10 * 60 * 1000 && isMinimized && isPageVisible && !notificationSent) {
+        console.log('🎤 Sending notification - 10 minutes inactive');
         showRandomMessage();
+        notificationSent = true;
+        hasUnreadNotification = true;
+        updateNotificationBadge();
       }
-    }, 60000);
+    }, 60000); // Check every minute
+
+    // Show popup messages at random intervals (1-3 minutes) if there's an unread notification
+    const popupInterval = setInterval(() => {
+      if (hasUnreadNotification && isMinimized && isPageVisible) {
+        const randomDelay = (1 + Math.random() * 2) * 60 * 1000; // 1-3 minutes
+        setTimeout(() => {
+          if (hasUnreadNotification && isMinimized && isPageVisible) {
+            console.log('🎤 Showing popup reminder');
+            showRandomMessage();
+          }
+        }, randomDelay);
+      }
+    }, 60000); // Check every minute
 
     // Cleanup function for when chatbot is closed
     window.lilIvrCleanup = function() {
       clearInterval(inactivityInterval);
+      clearInterval(popupInterval);
       document.removeEventListener('click', updateActivity);
       document.removeEventListener('keypress', updateActivity);
       document.removeEventListener('scroll', updateActivity);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
+  }
+
+  function updateNotificationBadge() {
+    try {
+      if (hasUnreadNotification) {
+        chrome.action.setBadgeText({ text: '!' });
+        chrome.action.setBadgeBackgroundColor({ color: '#FF0000' });
+        console.log('🎤 Set notification badge');
+      } else {
+        chrome.action.setBadgeText({ text: '' });
+        console.log('🎤 Cleared notification badge');
+      }
+    } catch (error) {
+      console.error('🎤 Error updating badge:', error);
+    }
   }
 
   async function showRandomMessage() {

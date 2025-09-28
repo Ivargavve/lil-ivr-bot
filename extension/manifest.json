@@ -17,8 +17,7 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["content.js"],
-      "css": ["chatbot.css"],
+      "js": ["popup-notifications.js"],
       "run_at": "document_end"
     }
   ],
@@ -28,7 +27,7 @@
     "128": "assets/icon128.png"
   },
   "action": {
-    "default_popup": "popup.html",
+    "default_popup": "chat.html",
     "default_title": "Lil IVR",
     "default_icon": {
       "16": "assets/icon16.png",
@@ -38,7 +37,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["chatbot-app.js", "chatbot.css", "assets/lilivr.jpg"],
+      "resources": ["assets/lilivr.jpg"],
       "matches": ["<all_urls>"]
     }
   ]

@@ -13,8 +13,8 @@
     body {
       width: 400px;
       height: 600px;
-      background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-      color: #e0e0e0;
+      background: linear-gradient(135deg, #0a1529 0%, #1a2440 100%);
+      color: #e8f4ff;
       font-family: 'Arial', sans-serif;
       display: flex;
       flex-direction: column;
@@ -23,40 +23,41 @@
     }
 
     .header {
-      background: linear-gradient(135deg, #404040 0%, #2a2a2a 100%);
+      background: linear-gradient(135deg, #1e3a5f 0%, #0f2844 100%);
       padding: 15px;
       display: flex;
       align-items: center;
       gap: 12px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-      border-bottom: 1px solid rgba(64, 64, 64, 0.8);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+      border-bottom: 1px solid rgba(59, 130, 246, 0.3);
     }
 
     .profile-pic {
       width: 40px;
       height: 40px;
       border-radius: 50%;
-      background: #3a3a3a;
-      color: #cccccc;
+      background: #1e40af;
+      color: #bfdbfe;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 20px;
       font-weight: bold;
+      border: 2px solid #3b82f6;
     }
 
     .header-text h1 {
       font-size: 18px;
       font-weight: bold;
       margin: 0;
-      color: white;
+      color: #bfdbfe;
     }
 
     .header-text p {
       font-size: 12px;
       opacity: 0.8;
       margin: 0;
-      color: #cccccc;
+      color: #93c5fd;
     }
 
     .chat-container {
@@ -141,27 +142,29 @@
     }
 
     .message.user .message-bubble {
-      background: linear-gradient(135deg, #555555 0%, #404040 100%);
+      background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
       color: white;
       border-bottom-right-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
     }
 
     .message.bot .message-bubble {
-      background: linear-gradient(135deg, #333333 0%, #262626 100%);
-      color: #e0e0e0;
+      background: linear-gradient(135deg, #1e3a5f 0%, #0f2844 100%);
+      color: #e8f4ff;
       border-bottom-left-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(59, 130, 246, 0.2);
     }
 
     .lyric-highlight {
-      background: rgba(136, 136, 136, 0.2);
-      border-left: 3px solid #888888;
+      background: rgba(59, 130, 246, 0.2);
+      border-left: 3px solid #3b82f6;
       padding: 8px;
       margin-top: 8px;
       border-radius: 8px;
       font-style: italic;
       font-size: 13px;
+      color: #bfdbfe;
     }
 
     .typing-indicator {
@@ -181,7 +184,7 @@
     .typing-dot {
       width: 4px;
       height: 4px;
-      background: #888888;
+      background: #3b82f6;
       border-radius: 50%;
       animation: typingDot 1.4s infinite ease-in-out;
     }
@@ -197,8 +200,8 @@
 
     .input-container {
       padding: 15px;
-      border-top: 1px solid rgba(64, 64, 64, 0.8);
-      background: linear-gradient(135deg, #262626 0%, #1a1a1a 100%);
+      border-top: 1px solid rgba(59, 130, 246, 0.3);
+      background: linear-gradient(135deg, #0f2844 0%, #0a1529 100%);
     }
 
     .input-area {
@@ -209,27 +212,27 @@
 
     .message-input {
       flex: 1;
-      background: linear-gradient(135deg, #404040 0%, #333333 100%);
-      border: 1px solid rgba(85, 85, 85, 0.8);
+      background: linear-gradient(135deg, #1e3a5f 0%, #0f2844 100%);
+      border: 1px solid rgba(59, 130, 246, 0.4);
       border-radius: 20px;
       padding: 10px 18px;
-      color: white;
+      color: #e8f4ff;
       font-size: 14px;
       outline: none;
       transition: all 0.2s ease;
     }
 
     .message-input:focus {
-      border-color: #888888;
-      box-shadow: 0 0 0 2px rgba(136, 136, 136, 0.2);
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
     }
 
     .message-input::placeholder {
-      color: #9CA3AF;
+      color: #93c5fd;
     }
 
     .send-button {
-      background: linear-gradient(135deg, #666666, #555555);
+      background: linear-gradient(135deg, #3b82f6, #1e40af);
       border: none;
       color: white;
       width: 40px;
@@ -241,11 +244,12 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      border: 1px solid rgba(59, 130, 246, 0.5);
     }
 
     .send-button:hover {
       transform: scale(1.05);
-      box-shadow: 0 4px 15px rgba(102, 102, 102, 0.4);
+      box-shadow: 0 4px 15px rgba(59, 130, 246, 0.5);
     }
 
     .send-button:disabled {
@@ -287,14 +291,14 @@
     </div>
     <div class="header-text">
       <h1>Lil IVR</h1>
-      <p>Swedish Rapper AI Assistant</p>
+      <p>Tjcackistan</p>
     </div>
   </div>
 
   <div class="chat-container">
     <div class="messages" id="messages">
       <div class="loading" id="loading">
-        <div>Laddar Lil IVR... 🎤</div>
+        <div>Springer hem från din morsa...</div>
       </div>
     </div>
 
@@ -314,6 +318,6 @@
     </div>
   </div>
 
-  <script src="popup.js"></script>
+  <script src="chat.js"></script>
 </body>
 </html>

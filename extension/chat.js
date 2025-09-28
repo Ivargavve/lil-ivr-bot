@@ -18,7 +18,24 @@ class LilIVRChat {
   }
 
   async init() {
-    console.log('🎤 Lil IVR Popup: Initializing...');
+    // Notify background that popup is open
+    try {
+      await chrome.runtime.sendMessage({ action: 'popupOpened' });
+    } catch (error) {
+    }
+
+    // Check for pending notifications
+    await this.checkForNotifications();
+
+    // Start sending ping messages to keep popup status alive
+    this.pingInterval = setInterval(async () => {
+      try {
+        await chrome.runtime.sendMessage({ action: 'popupPing' });
+      } catch (error) {
+        // Popup was closed, clear interval
+        clearInterval(this.pingInterval);
+      }
+    }, 1000); // Ping every second
 
     // Load saved messages first
     await this.loadMessages();
@@ -30,9 +47,12 @@ class LilIVRChat {
     await this.getCurrentTab();
 
     // Start with a greeting only if no messages exist
+    console.log('🎤 [CHAT] Messages length:', this.messages.length);
     if (this.messages.length === 0) {
+      console.log('🎤 [CHAT] Sending initial greeting...');
       await this.sendInitialGreeting();
     } else {
+      console.log('🎤 [CHAT] Rendering existing messages...');
       // Render existing messages
       this.renderAllMessages();
     }
@@ -67,9 +87,7 @@ class LilIVRChat {
     try {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
       this.currentTab = tab;
-      console.log('🎤 Current tab:', tab?.title);
     } catch (error) {
-      console.error('🎤 Error getting current tab:', error);
     }
   }
 
@@ -80,6 +98,8 @@ class LilIVRChat {
       if (this.currentTab) {
         webpageUrl = this.currentTab.url || '';
       }
+
+      console.log('🎤 [CHAT] Sending greeting for URL:', webpageUrl);
 
       // Send greeting request to backend
       const response = await fetch(`${API_BASE_URL}/analyze-webpage`, {
@@ -92,14 +112,18 @@ class LilIVRChat {
         })
       });
 
+      console.log('🎤 [CHAT] Greeting response status:', response.status);
+
       if (response.ok) {
         const data = await response.json();
+        console.log('🎤 [CHAT] Greeting data:', data);
         this.addMessage(data.greeting, true);
       } else {
+        console.log('🎤 [CHAT] Using fallback greeting');
         this.addMessage('Heyyo skibidi toe! Vad kan jag hjälpa dig med idag? 🎤', true);
       }
     } catch (error) {
-      console.error('🎤 Error sending initial greeting:', error);
+      console.error('🎤 [CHAT] Greeting error:', error);
       this.addMessage('Heyyo skibidi toe! Vad kan jag hjälpa dig med idag? 🎤', true);
     }
   }
@@ -107,6 +131,12 @@ class LilIVRChat {
   async handleSendMessage() {
     const messageText = this.messageInput.value.trim();
     if (!messageText || this.isLoading) return;
+
+    // Prepare conversation history BEFORE adding current message
+    const conversationHistory = this.messages.map(msg => ({
+      role: msg.isBot ? 'assistant' : 'user',
+      content: msg.text
+    }));
 
     // Add user message
     this.addMessage(messageText, false);
@@ -117,7 +147,7 @@ class LilIVRChat {
     this.setLoading(true);
 
     try {
-      // Send to backend
+      // Send to backend with conversation history
       const response = await fetch(`${API_BASE_URL}/chat`, {
         method: 'POST',
         headers: {
@@ -125,12 +155,35 @@ class LilIVRChat {
         },
         body: JSON.stringify({
           message: messageText,
-          webpage_context: this.currentTab?.url || null
+          webpage_context: this.currentTab?.url || null,
+          conversation_history: conversationHistory
         })
       });
 
       if (response.ok) {
         const data = await response.json();
+
+        // Check if user disabled popups
+        const disablePopupPhrases = [
+          "stäng av popup", "stoppa popup", "sluta popup", "stäng popup",
+          "disable popup", "turn off popup", "stop popup", "no popup"
+        ];
+
+        const userDisabledPopups = disablePopupPhrases.some(phrase =>
+          messageText.toLowerCase().includes(phrase)
+        );
+
+        if (userDisabledPopups) {
+          // Send message to content script to disable popups
+          try {
+            const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+            if (tabs[0]) {
+              chrome.tabs.sendMessage(tabs[0].id, { action: 'disablePopups' });
+            }
+          } catch (error) {
+            // Ignore errors
+          }
+        }
 
         // Simulate typing delay
         setTimeout(() => {
@@ -143,7 +196,6 @@ class LilIVRChat {
         throw new Error(`Server error: ${response.status}`);
       }
     } catch (error) {
-      console.error('🎤 Error sending message:', error);
       setTimeout(() => {
         this.addMessage("Asså bror, något gick fel med servern! 😅 Kontrollera att backend körs på localhost:8000", true);
         this.setTyping(false);
@@ -175,6 +227,9 @@ class LilIVRChat {
     messageDiv.className = `message ${message.isBot ? 'bot' : 'user'}`;
 
     let messageContent = this.escapeHtml(message.text);
+
+    // Make URLs clickable (must happen before lyric highlighting to preserve links)
+    messageContent = this.makeLinksClickable(messageContent);
 
     // Handle lyric highlighting
     if (message.isBot && message.includesLyric && message.lyricLine) {
@@ -257,6 +312,18 @@ class LilIVRChat {
     return div.innerHTML;
   }
 
+  makeLinksClickable(text) {
+    // Convert URLs to clickable links
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    return text.replace(urlRegex, (url) => {
+      // Remove trailing punctuation that might have been included
+      const cleanUrl = url.replace(/[.,;:!?]$/, '');
+      const trailingPunc = url.length > cleanUrl.length ? url.slice(-1) : '';
+
+      return `<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer" style="color: #60a5fa; text-decoration: underline;">${cleanUrl}</a>${trailingPunc}`;
+    });
+  }
+
   showError(message) {
     const errorDiv = document.createElement('div');
     errorDiv.className = 'error-message';
@@ -272,7 +339,6 @@ class LilIVRChat {
         'lilIVRMessages': this.messages
       });
     } catch (error) {
-      console.error('🎤 Error saving messages:', error);
     }
   }
 
@@ -281,10 +347,8 @@ class LilIVRChat {
       const result = await chrome.storage.session.get(['lilIVRMessages']);
       if (result.lilIVRMessages && Array.isArray(result.lilIVRMessages)) {
         this.messages = result.lilIVRMessages;
-        console.log('🎤 Loaded', this.messages.length, 'saved messages');
       }
     } catch (error) {
-      console.error('🎤 Error loading messages:', error);
       this.messages = [];
     }
   }
@@ -301,18 +365,45 @@ class LilIVRChat {
     this.scrollToBottom();
   }
 
+  // Check for notifications from background script
+  async checkForNotifications() {
+    try {
+      const result = await chrome.storage.session.get(['lilIVRNotification']);
+      if (result.lilIVRNotification) {
+        const notification = result.lilIVRNotification;
+        console.log('🎤 [POPUP] Found notification:', notification.message);
+
+        // Add notification as bot message if not already in messages
+        const lastMessage = this.messages[this.messages.length - 1];
+        if (!lastMessage || lastMessage.text !== notification.message) {
+          this.addMessage(notification.message, true);
+        }
+
+        // Clear the notification
+        await chrome.storage.session.remove(['lilIVRNotification']);
+      }
+    } catch (error) {
+      console.error('🎤 [POPUP] Error checking notifications:', error);
+    }
+  }
+
   // Method to clear chat history (optional - for debugging or user preference)
   async clearMessages() {
     this.messages = [];
     this.messagesContainer.innerHTML = '';
     await chrome.storage.session.remove(['lilIVRMessages']);
-    console.log('🎤 Chat history cleared');
+  }
+
+  // Cleanup method
+  cleanup() {
+    if (this.pingInterval) {
+      clearInterval(this.pingInterval);
+    }
   }
 }
 
 // Initialize when popup loads
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('🎤 Lil IVR Popup: DOM loaded, starting chat...');
   window.lilIVRChat = new LilIVRChat();
 });
 
@@ -321,5 +412,29 @@ window.addEventListener('focus', () => {
   const input = document.getElementById('messageInput');
   if (input && !input.disabled) {
     input.focus();
+  }
+});
+
+// Handle popup close/unload
+window.addEventListener('beforeunload', () => {
+  try {
+    if (window.lilIVRChat) {
+      window.lilIVRChat.cleanup();
+    }
+    chrome.runtime.sendMessage({ action: 'popupClosed' });
+  } catch (error) {
+  }
+});
+
+// Also handle when popup loses visibility (alternative close detection)
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    try {
+      if (window.lilIVRChat) {
+        window.lilIVRChat.cleanup();
+      }
+      chrome.runtime.sendMessage({ action: 'popupClosed' });
+    } catch (error) {
+    }
   }
 });
