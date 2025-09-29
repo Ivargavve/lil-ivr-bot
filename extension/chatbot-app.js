@@ -381,23 +381,51 @@
       }
     }, 60000); // Check every minute
 
-    // Show popup messages at random intervals (1-3 minutes) if there's an unread notification
-    const popupInterval = setInterval(() => {
+    // Show popup messages at random intervals (30-90 seconds) if there's an unread notification
+    let popupTimer = null;
+
+    function scheduleNextPopup() {
+      if (popupTimer) {
+        clearTimeout(popupTimer);
+        popupTimer = null;
+      }
+
       if (hasUnreadNotification && isMinimized && isPageVisible) {
-        const randomDelay = (1 + Math.random() * 2) * 60 * 1000; // 1-3 minutes
-        setTimeout(() => {
+        const randomDelay = (30 + Math.random() * 60) * 1000; // 30-90 seconds
+        console.log(`🎤 Scheduling next popup in ${Math.round(randomDelay/1000)} seconds`);
+
+        popupTimer = setTimeout(() => {
           if (hasUnreadNotification && isMinimized && isPageVisible) {
             console.log('🎤 Showing popup reminder');
             showRandomMessage();
+            scheduleNextPopup(); // Schedule the next one
           }
         }, randomDelay);
       }
-    }, 60000); // Check every minute
+    }
+
+    // Start the popup cycle
+    scheduleNextPopup();
+
+    // Reschedule when conditions change
+    const popupInterval = setInterval(() => {
+      if (hasUnreadNotification && isMinimized && isPageVisible && !popupTimer) {
+        scheduleNextPopup();
+      } else if ((!hasUnreadNotification || !isMinimized || !isPageVisible) && popupTimer) {
+        clearTimeout(popupTimer);
+        popupTimer = null;
+        console.log('🎤 Stopped popup schedule - conditions not met');
+      }
+    }, 5000); // Check every 5 seconds
 
     // Cleanup function for when chatbot is closed
     window.lilIvrCleanup = function() {
       clearInterval(inactivityInterval);
       clearInterval(popupInterval);
+      if (popupTimer) {
+        clearTimeout(popupTimer);
+        popupTimer = null;
+      }
       document.removeEventListener('click', updateActivity);
       document.removeEventListener('keypress', updateActivity);
       document.removeEventListener('scroll', updateActivity);
