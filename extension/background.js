@@ -24,18 +24,18 @@ let userState = {
   lastExclamationMessage: null  // Store last message to detect new ones
 };
 
-// Generate random interval between 30 seconds - 3 minutes for popups
+// Generate random interval between 30 seconds - 1 minute for popups
 function getRandomPopupInterval() {
   const minSeconds = 30;
-  const maxSeconds = 3 * 60; // 3 minutes in seconds
+  const maxSeconds = 1 * 60; // 1 minute in seconds
   const randomSeconds = Math.floor(Math.random() * (maxSeconds - minSeconds + 1)) + minSeconds;
   return randomSeconds * 1000; // Convert to milliseconds
 }
 
-// Generate random interval for exclamation checks (1-10 minutes)
+// Generate random interval for exclamation checks (1-3 minutes)
 function getRandomExclamationInterval() {
   const minMinutes = 1;
-  const maxMinutes = 10; // 10 minutes
+  const maxMinutes = 3; // 3 minutes
   const randomMinutes = Math.floor(Math.random() * (maxMinutes - minMinutes + 1)) + minMinutes;
   return randomMinutes * 60 * 1000; // Convert to milliseconds
 }
