@@ -3,13 +3,15 @@
   "name": "Lil IVR Bot",
   "version": "1.0.0",
   "description": "A goofy Swedish SoundCloud rapper chatbot that helps you with anything!",
+  "author": "Lil IVR Bot Team",
+  "homepage_url": "https://lil-ivr-bot.onrender.com",
   "permissions": [
     "activeTab",
     "storage",
     "scripting"
   ],
   "host_permissions": [
-    "<all_urls>"
+    "https://lil-ivr-bot.onrender.com/*"
   ],
   "background": {
     "service_worker": "background.js"

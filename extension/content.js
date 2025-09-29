@@ -102,7 +102,7 @@ if (!document.getElementById('lil-ivr-chatbot-root')) {
   // Generate random popup message using AI
   async function generatePopupMessage() {
     try {
-      const response = await fetch('http://localhost:8000/chat', {
+      const response = await fetch(`${window.LIL_IVR_CONFIG?.API_BASE_URL || 'https://lil-ivr-bot.onrender.com'}/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -273,7 +273,7 @@ if (!document.getElementById('lil-ivr-chatbot-root')) {
     }
   }
 
-  // Function to schedule next popup with random interval (10s to 20s for debugging)
+  // Function to schedule next popup with random interval
   function scheduleNextPopup() {
     const minInterval = 10000; // 10 seconds
     const maxInterval = 20000; // 20 seconds
@@ -307,7 +307,7 @@ if (!document.getElementById('lil-ivr-chatbot-root')) {
     lastPopupTime = 0;
   };
 
-  // Make popup function available globally for manual testing
+  // Make popup function available globally
   window.lilIvrTestPopup = function() {
     createRandomPopup();
   };

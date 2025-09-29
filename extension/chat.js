@@ -377,7 +377,7 @@ class LilIVRChat {
     }
   }
 
-  // Method to clear chat history (optional - for debugging or user preference)
+  // Method to clear chat history
   async clearMessages() {
     this.messages = [];
     this.messagesContainer.innerHTML = '';
