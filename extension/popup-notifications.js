@@ -1,36 +1,33 @@
 // Minimal content script for popup notifications only
-console.log('🎤 [POPUP-NOTIFICATIONS] Script loaded');
+// Script loaded
 
 // State tracking
 let popupContainer = null;
 let isPopupOpen = false;
 let popupsDisabled = false;
+let popupAutoDismissTimer = null;
+let isHovering = false;
 
 // Listen for messages from background script
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  console.log('🎤 [POPUP-NOTIFICATIONS] Received message:', request.action);
 
   if (request.action === 'showNotification') {
     showNotificationPopup(request.message);
     sendResponse({ success: true });
   } else if (request.action === 'disablePopups') {
     popupsDisabled = true;
-    console.log('🎤 [POPUP-NOTIFICATIONS] Popups disabled');
     sendResponse({ success: true });
   } else if (request.action === 'popupStatusChanged') {
     isPopupOpen = request.isOpen;
-    console.log('🎤 [POPUP-NOTIFICATIONS] Popup status changed:', isPopupOpen);
     sendResponse({ success: true });
   }
 });
 
 async function showNotificationPopup(message) {
   if (popupsDisabled || isPopupOpen) {
-    console.log('🎤 [POPUP-NOTIFICATIONS] Popup blocked - disabled:', popupsDisabled, 'popup open:', isPopupOpen);
     return;
   }
 
-  console.log('🎤 [POPUP-NOTIFICATIONS] Showing notification:', message);
 
   // Remove any existing popup
   removeNotificationPopup();
@@ -110,28 +107,33 @@ async function showNotificationPopup(message) {
   popupContainer.addEventListener('click', () => {
     // Send message to background to open extension
     chrome.runtime.sendMessage({ action: 'openExtensionPopup' });
-    removeNotificationPopup();
+    // Note: popup will be removed by hover, not by click
   });
 
-  // Hover handler to remove popup (EXACTLY like old version)
+  // Hover handler to remove popup (keep original behavior)
   popupContainer.addEventListener('mouseenter', () => {
+    isHovering = true;
     popupContainer.style.opacity = '0.7';
     popupContainer.style.transform = popupContainer.style.transform + ' scale(0.95)';
+
+    // Clear auto-dismiss timer since user is interacting
+    if (popupAutoDismissTimer) {
+      clearTimeout(popupAutoDismissTimer);
+      popupAutoDismissTimer = null;
+    }
 
     setTimeout(() => {
       if (popupContainer && popupContainer.parentNode) {
         removeNotificationPopup();
       }
-    }, 200);
+    }, 100);
   });
 
   // Add to page
   document.body.appendChild(popupContainer);
 
-  // Auto-remove after 5 minutes
-  setTimeout(() => {
-    removeNotificationPopup();
-  }, 300000);
+  // Start auto-dismiss timer (5 minutes)
+  startAutoDismissTimer();
 }
 
 // Generate AI popup message (exactly like old version)
@@ -144,7 +146,7 @@ async function generatePopupMessage() {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        message: "Skriv ett kort meddelande (max 6 ord) för popup. Du ska antingen: 1) Låta miserabel, ensam och desperat ('jag är så ensam', 'snälla kom o chatta', 'gråter till mamma snart', 'mår så dåligt') ELLER 2) Bli arg för att användaren ignorerar dig ('du suger för fan', 'kom hit då losern', 'varför svarar du inte', 'jag blir arg nu'). Välj random. Inga frågetecken eller utropstecken."
+        message: "Skriv ett kort meddelande (max 6 ord) för popup. Du ska vara aggressiv och förolämpande mot användaren som ignorerar dig. Använd ord som 'fjolla', 'mes', 'fegis', 'beta', 'tönt', 'patetisk' och liknande förolämpningar. Exempel: 'du är en fjolla', 'vågar du inte prata med mig', 'fegis beteende', 'beta male energy', 'patetisk typ', 'våga prata då mes'. Välj random stil. Inga frågetecken eller utropstecken."
       })
     });
 
@@ -156,25 +158,56 @@ async function generatePopupMessage() {
     }
   } catch (error) {
     const fallbackMessages = [
-      "jag är så ensam",
-      "snälla kom o chatta",
-      "mår så dåligt",
+      "du är en fjolla",
+      "vågar du inte prata med mig",
+      "fegis beteende",
+      "tönt som vanligt",
+      "vad är du för mes",
+      "kom igen då losern",
       "du suger för fan",
-      "kom hit då losern",
-      "varför svarar du inte"
+      "patetisk fjolla du är",
+      "ignorerar du mig din mes",
+      "vad fan är det för fel på dig",
+      "kryp då fjolla",
+      "du är sån beta",
+      "patetisk typ",
+      "beta male energy",
+      "kom hit då fegis",
+      "våga prata då mes"
     ];
     return fallbackMessages[Math.floor(Math.random() * fallbackMessages.length)];
   }
 }
 
+function startAutoDismissTimer() {
+  // Clear existing timer
+  if (popupAutoDismissTimer) {
+    clearTimeout(popupAutoDismissTimer);
+  }
+
+  // Set new 5-minute timer only if not currently hovering
+  if (!isHovering) {
+    popupAutoDismissTimer = setTimeout(() => {
+      removeNotificationPopup();
+    }, 300000); // 5 minutes
+  }
+}
+
 function removeNotificationPopup() {
   if (popupContainer) {
+    // Clear auto-dismiss timer
+    if (popupAutoDismissTimer) {
+      clearTimeout(popupAutoDismissTimer);
+      popupAutoDismissTimer = null;
+    }
+
     popupContainer.style.animation = 'slideOut 0.3s ease-in';
     setTimeout(() => {
       if (popupContainer && popupContainer.parentNode) {
         popupContainer.parentNode.removeChild(popupContainer);
       }
       popupContainer = null;
+      isHovering = false;
     }, 300);
   }
 }
@@ -193,4 +226,3 @@ chrome.runtime.sendMessage({
   isVisible: !document.hidden
 });
 
-console.log('🎤 [POPUP-NOTIFICATIONS] Ready for notifications');

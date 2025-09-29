@@ -1,10 +1,10 @@
 // Lil IVR Bot Background Service Worker
 
-console.log('Lil IVR Bot: Background script started!');
 
 // Configuration
-const API_BASE_URL = 'http://localhost:8000';
-// For production: const API_BASE_URL = 'https://your-app-name.onrender.com';
+// const API_BASE_URL = 'http://localhost:8000';
+// For production:
+const API_BASE_URL = 'https://lil-ivr-bot.onrender.com';
 
 // Store user activity and notification state
 let userState = {
@@ -19,15 +19,25 @@ let userState = {
   lastPopupTime: Date.now(),   // Track when last popup was sent
   lastChatMessage: Date.now(),  // Track when last chat message was sent
   nextPopupTime: Date.now() + getRandomPopupInterval(), // Next scheduled popup time
-  lastChatOpened: Date.now()   // Track when chat was last opened
+  lastChatOpened: Date.now(),   // Track when chat was last opened
+  nextExclamationTime: Date.now() + getRandomExclamationInterval(), // Next exclamation check (1-10 minutes)
+  lastExclamationMessage: null  // Store last message to detect new ones
 };
 
-// Generate random interval between 30 seconds - 10 minutes (in milliseconds)
+// Generate random interval between 30 seconds - 3 minutes for popups
 function getRandomPopupInterval() {
   const minSeconds = 30;
-  const maxSeconds = 10 * 60; // 10 minutes in seconds
+  const maxSeconds = 3 * 60; // 3 minutes in seconds
   const randomSeconds = Math.floor(Math.random() * (maxSeconds - minSeconds + 1)) + minSeconds;
   return randomSeconds * 1000; // Convert to milliseconds
+}
+
+// Generate random interval for exclamation checks (1-10 minutes)
+function getRandomExclamationInterval() {
+  const minMinutes = 1;
+  const maxMinutes = 10; // 10 minutes
+  const randomMinutes = Math.floor(Math.random() * (maxMinutes - minMinutes + 1)) + minMinutes;
+  return randomMinutes * 60 * 1000; // Convert to milliseconds
 }
 
 // Proactive messages
@@ -65,32 +75,21 @@ setInterval(() => {
   // Check if popup has timed out (no ping for 3 seconds)
   if (userState.popupOpen && (now - userState.lastPopupPing > 3000)) {
     userState.popupOpen = false;
-    console.log('🎤 [BACKGROUND] Popup timed out - enabling content script popups');
     broadcastToAllTabs({ action: 'popupStatusChanged', isOpen: false });
   }
 
-  // Send popups at random intervals (1-20 minutes) if NOT in chat AND page is visible
-  if (!userState.popupOpen && userState.isPageVisible && (now >= userState.nextPopupTime)) {
+  // Send popups at random intervals ONLY if there's an unread notification (exclamation mark)
+  if (!userState.popupOpen && userState.isPageVisible && userState.hasUnreadNotification && (now >= userState.nextPopupTime)) {
     const nextInterval = getRandomPopupInterval();
-    console.log(`🎤 [BACKGROUND] Sending popup - next one in ${nextInterval / 60000} minutes`);
     sendPopupNotification();
     userState.lastPopupTime = now;
     userState.nextPopupTime = now + nextInterval; // Schedule next popup
   }
 
-  // Send chat message with song link every 30 seconds if unread (for debugging)
-  // ONLY when popup NOT open AND page visible (to save money on API calls)
-  if (!userState.popupOpen && userState.isPageVisible && (now - userState.lastChatMessage > 30 * 1000)) {
-    console.log('🎤 [BACKGROUND] Sending chat message after 30 seconds (page visible)');
-    sendChatMessage();
-    userState.lastChatMessage = now;
-    userState.hasUnreadNotification = true;
-    updateNotificationBadge();
-  }
-
-  // Update badge regularly to check 10-minute rule (only when page is visible)
-  if (userState.isPageVisible) {
-    updateNotificationBadge();
+  // Check for new message from lil ivr and set exclamation mark (every 1-10 minutes, only when page visible and focused)
+  if (!userState.popupOpen && userState.isPageVisible && (now >= userState.nextExclamationTime)) {
+    checkForNewLilIvrMessage();
+    userState.nextExclamationTime = now + getRandomExclamationInterval(); // Next check in 1-10 minutes
   }
 }, 1000);
 
@@ -98,7 +97,6 @@ setInterval(() => {
 async function sendPopupNotification() {
   try {
     const message = getRandomProactiveMessage();
-    console.log('🎤 [BACKGROUND] Sending popup:', message);
 
     // Send popup notification to all tabs
     await broadcastToAllTabs({
@@ -106,9 +104,7 @@ async function sendPopupNotification() {
       message: message
     });
 
-    console.log('🎤 [BACKGROUND] Popup notification sent to all tabs');
   } catch (error) {
-    console.error('🎤 [BACKGROUND] Error sending popup notification:', error);
   }
 }
 
@@ -119,7 +115,6 @@ async function sendChatMessage() {
     const response = await fetch(`${API_BASE_URL}/random-message`);
     if (response.ok) {
       const data = await response.json();
-      console.log('🎤 [BACKGROUND] Got chat message:', data.message);
 
       // Store the notification message for chat to show
       await chrome.storage.session.set({
@@ -130,45 +125,58 @@ async function sendChatMessage() {
       });
 
       userState.lastNotificationTime = Date.now();
-      console.log('🎤 [BACKGROUND] Chat message stored');
     }
   } catch (error) {
-    console.error('🎤 [BACKGROUND] Error getting chat message:', error);
+  }
+}
+
+// New function to check for new messages from lil ivr
+async function checkForNewLilIvrMessage() {
+  try {
+    // Get random message from backend (includes song links)
+    const response = await fetch(`${API_BASE_URL}/random-message`);
+    if (response.ok) {
+      const data = await response.json();
+
+      // Check if this is a new message (different from last one)
+      if (userState.lastExclamationMessage !== data.message) {
+        userState.lastExclamationMessage = data.message;
+        userState.hasUnreadNotification = true;
+
+        // Store the notification message for chat to show
+        await chrome.storage.session.set({
+          'lilIVRNotification': {
+            message: data.message,
+            timestamp: Date.now()
+          }
+        });
+
+        updateNotificationBadge();
+      } else {
+      }
+    }
+  } catch (error) {
   }
 }
 
 function updateNotificationBadge() {
   try {
-    const now = Date.now();
-    const timeSinceLastChatOpened = now - userState.lastChatOpened;
-    const tenMinutes = 10 * 60 * 1000; // 10 minutes in milliseconds
-
-    // Show exclamation mark if chat hasn't been opened for 10+ minutes
-    if (timeSinceLastChatOpened >= tenMinutes) {
+    if (userState.hasUnreadNotification) {
       chrome.action.setBadgeText({ text: '!' });
       chrome.action.setBadgeBackgroundColor({ color: '#3b82f6' }); // Blue instead of red
-      console.log('🎤 [BACKGROUND] Set exclamation badge (10+ minutes without chat)');
-    } else if (userState.hasUnreadNotification) {
-      chrome.action.setBadgeText({ text: '!' });
-      chrome.action.setBadgeBackgroundColor({ color: '#3b82f6' }); // Blue instead of red
-      console.log('🎤 [BACKGROUND] Set notification badge');
     } else {
       chrome.action.setBadgeText({ text: '' });
-      console.log('🎤 [BACKGROUND] Cleared notification badge');
     }
   } catch (error) {
-    console.error('🎤 [BACKGROUND] Error updating badge:', error);
   }
 }
 
 async function sendProactiveMessage() {
   // Keep old function for compatibility but not used in new system
-  console.log('🎤 [BACKGROUND] Legacy sendProactiveMessage called');
 }
 
 // Handle extension icon click - open chat directly
 chrome.action.onClicked.addListener(async (tab) => {
-  console.log('🎤 Extension icon clicked for tab:', tab.id);
   userState.lastActiveTime = Date.now();
   userState.isActive = true;
 
@@ -177,9 +185,7 @@ chrome.action.onClicked.addListener(async (tab) => {
     const response = await chrome.tabs.sendMessage(tab.id, {
       action: 'openChat'
     });
-    console.log('🎤 Sent openChat message to tab:', tab.id, 'Response:', response);
   } catch (error) {
-    console.error('🎤 Error opening chat:', error);
 
     // If content script is not ready, try to inject it
     try {
@@ -187,19 +193,15 @@ chrome.action.onClicked.addListener(async (tab) => {
         target: { tabId: tab.id },
         files: ['content.js']
       });
-      console.log('🎤 Content script injected manually');
 
       // Try again after injection
       setTimeout(async () => {
         try {
           await chrome.tabs.sendMessage(tab.id, { action: 'openChat' });
-          console.log('🎤 Second attempt successful');
         } catch (e) {
-          console.error('🎤 Second attempt failed:', e);
         }
       }, 500);
     } catch (injectError) {
-      console.error('🎤 Failed to inject content script:', injectError);
     }
   }
 });
@@ -219,17 +221,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     userState.lastChatMessage = Date.now(); // Reset chat message timer
     userState.lastChatOpened = Date.now(); // Reset chat opened timer
     updateNotificationBadge();
-    console.log('🎤 [BACKGROUND] Popup opened - reset timers and cleared notifications');
   } else if (request.action === 'popupClosed') {
     userState.popupOpen = false;
-    console.log('🎤 [BACKGROUND] Popup closed');
   } else if (request.action === 'popupPing') {
     // Keep popup alive signal
     userState.lastPopupPing = Date.now();
     sendResponse({ status: 'ok' });
   } else if (request.action === 'pageVisibilityChanged') {
     userState.isPageVisible = request.isVisible;
-    console.log('🎤 [BACKGROUND] Page visibility:', request.isVisible ? 'visible' : 'hidden');
   } else if (request.action === 'getNotificationState') {
     sendResponse({
       hasUnreadNotification: userState.hasUnreadNotification,
@@ -238,7 +237,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   } else if (request.action === 'openExtensionPopup') {
     // Note: Cannot programmatically open extension popup in manifest v3
     // User needs to click the extension icon manually
-    console.log('🎤 [BACKGROUND] Request to open extension popup received');
     sendResponse({ success: true });
   }
 });
@@ -255,8 +253,6 @@ async function broadcastToAllTabs(message) {
       }
     }
   } catch (error) {
-    console.error('🎤 [BACKGROUND] Error broadcasting to tabs:', error);
   }
 }
 
-console.log('Lil IVR Bot: Background script ready!');

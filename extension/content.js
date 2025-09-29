@@ -108,7 +108,7 @@ if (!document.getElementById('lil-ivr-chatbot-root')) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          message: "Skriv ett kort meddelande (max 6 ord) för popup. Du ska antingen: 1) Låta miserabel, ensam och desperat ('jag är så ensam', 'snälla kom o chatta', 'gråter till mamma snart', 'mår så dåligt') ELLER 2) Bli arg för att användaren ignorerar dig ('du suger för fan', 'kom hit då losern', 'varför svarar du inte', 'jag blir arg nu'). Välj random. Inga frågetecken eller utropstecken."
+          message: "Skriv ett kort meddelande (max 6 ord) för popup. Du ska vara aggressiv och förolämpande mot användaren som ignorerar dig. Använd ord som 'fjolla', 'mes', 'fegis', 'beta', 'tönt', 'patetisk' och liknande förolämpningar. Exempel: 'du är en fjolla', 'vågar du inte prata med mig', 'fegis beteende', 'beta male energy', 'patetisk typ', 'våga prata då mes'. Välj random stil. Inga frågetecken eller utropstecken."
         })
       });
 

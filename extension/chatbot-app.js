@@ -20,11 +20,9 @@
   // Create the chatbot UI
   function createChatbotUI() {
     if (document.getElementById('lil-ivr-chatbot')) {
-      console.log('🎤 Chatbot already exists');
       return;
     }
 
-    console.log('🎤 Creating chatbot UI...');
     chatbotContainer = document.createElement('div');
     chatbotContainer.id = 'lil-ivr-chatbot';
     chatbotContainer.className = 'lil-ivr-chatbot';
@@ -46,7 +44,6 @@
     // Setup proactive messaging
     setupProactiveMessaging();
 
-    console.log('🎤 Lil IVR Bot: Chatbot UI created');
   }
 
   function updateChatbotUI() {
@@ -219,7 +216,6 @@
         initialGreetingSent = true;
       }
     } catch (error) {
-      console.error('Error analyzing webpage:', error);
       addMessage('Heyyo skibidi toe! Vad kan jag hjälpa dig med idag? 🎤', true);
       initialGreetingSent = true;
     }
@@ -264,7 +260,6 @@
         throw new Error('Server error');
       }
     } catch (error) {
-      console.error('Error sending message:', error);
       setTimeout(() => {
         addMessage("Asså bror, något gick fel med servern! 😅 Kan du testa igen?", true);
         setTyping(false);
@@ -313,7 +308,6 @@
       notificationSent = false;
       hasUnreadNotification = false;
       updateNotificationBadge();
-      console.log('🎤 Chat opened - reset timer and cleared notifications');
     }
 
     // If opening chat for first time, send greeting
@@ -345,7 +339,6 @@
     // Track page visibility to prevent popups when alt-tabbed
     const handleVisibilityChange = () => {
       isPageVisible = !document.hidden;
-      console.log('🎤 Page visibility changed:', isPageVisible ? 'visible' : 'hidden');
     };
 
     document.addEventListener('click', updateActivity);
@@ -360,7 +353,6 @@
         setMinimized(false);
         setVisible(true);
       } else if (event.data.type === 'LIL_IVR_OPEN_CHAT') {
-        console.log('🎤 Received open chat message');
         setVisible(true);
         setMinimized(false);
       }
@@ -373,7 +365,6 @@
 
       // Send notification after 10 minutes of inactivity (only once per cycle)
       if (inactiveTime > 10 * 60 * 1000 && isMinimized && isPageVisible && !notificationSent) {
-        console.log('🎤 Sending notification - 10 minutes inactive');
         showRandomMessage();
         notificationSent = true;
         hasUnreadNotification = true;
@@ -392,11 +383,9 @@
 
       if (hasUnreadNotification && isMinimized && isPageVisible) {
         const randomDelay = (30 + Math.random() * 60) * 1000; // 30-90 seconds
-        console.log(`🎤 Scheduling next popup in ${Math.round(randomDelay/1000)} seconds`);
 
         popupTimer = setTimeout(() => {
           if (hasUnreadNotification && isMinimized && isPageVisible) {
-            console.log('🎤 Showing popup reminder');
             showRandomMessage();
             scheduleNextPopup(); // Schedule the next one
           }
@@ -414,7 +403,6 @@
       } else if ((!hasUnreadNotification || !isMinimized || !isPageVisible) && popupTimer) {
         clearTimeout(popupTimer);
         popupTimer = null;
-        console.log('🎤 Stopped popup schedule - conditions not met');
       }
     }, 5000); // Check every 5 seconds
 
@@ -438,13 +426,10 @@
       if (hasUnreadNotification) {
         chrome.action.setBadgeText({ text: '!' });
         chrome.action.setBadgeBackgroundColor({ color: '#FF0000' });
-        console.log('🎤 Set notification badge');
       } else {
         chrome.action.setBadgeText({ text: '' });
-        console.log('🎤 Cleared notification badge');
       }
     } catch (error) {
-      console.error('🎤 Error updating badge:', error);
     }
   }
 
@@ -458,7 +443,6 @@
         setVisible(true);
       }
     } catch (error) {
-      console.error('Error getting random message:', error);
     }
   }
 
@@ -466,7 +450,6 @@
   window.lilIvrToggleMinimize = function() {
     setMinimized(!isMinimized);
     lastActiveTime = Date.now();
-    console.log('🎤 Toggled chat, minimized:', isMinimized);
   };
 
   window.lilIvrCloseChatbot = function() {
@@ -488,12 +471,10 @@
   window.lilIvrOpenChat = function() {
     setVisible(true);
     setMinimized(false);
-    console.log('🎤 Chat opened directly');
   };
 
   // Listen for messages from content script and background
   chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    console.log('🎤 Received message:', request);
 
     if (request.action === 'toggleChatbot' || request.action === 'openChat') {
       setVisible(true);
@@ -513,10 +494,8 @@
   // Fallback: Make sure chatbot is created after a delay
   setTimeout(() => {
     if (!document.getElementById('lil-ivr-chatbot')) {
-      console.log('🎤 Chatbot not found, creating fallback...');
       createChatbotUI();
     }
   }, 1000);
 
-  console.log('🎤 Lil IVR Bot: Chatbot app initialized!');
 })();

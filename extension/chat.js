@@ -47,12 +47,9 @@ class LilIVRChat {
     await this.getCurrentTab();
 
     // Start with a greeting only if no messages exist
-    console.log('🎤 [CHAT] Messages length:', this.messages.length);
     if (this.messages.length === 0) {
-      console.log('🎤 [CHAT] Sending initial greeting...');
       await this.sendInitialGreeting();
     } else {
-      console.log('🎤 [CHAT] Rendering existing messages...');
       // Render existing messages
       this.renderAllMessages();
     }
@@ -99,7 +96,6 @@ class LilIVRChat {
         webpageUrl = this.currentTab.url || '';
       }
 
-      console.log('🎤 [CHAT] Sending greeting for URL:', webpageUrl);
 
       // Send greeting request to backend
       const response = await fetch(`${API_BASE_URL}/analyze-webpage`, {
@@ -112,18 +108,14 @@ class LilIVRChat {
         })
       });
 
-      console.log('🎤 [CHAT] Greeting response status:', response.status);
 
       if (response.ok) {
         const data = await response.json();
-        console.log('🎤 [CHAT] Greeting data:', data);
         this.addMessage(data.greeting, true);
       } else {
-        console.log('🎤 [CHAT] Using fallback greeting');
         this.addMessage('Heyyo skibidi toe! Vad kan jag hjälpa dig med idag? 🎤', true);
       }
     } catch (error) {
-      console.error('🎤 [CHAT] Greeting error:', error);
       this.addMessage('Heyyo skibidi toe! Vad kan jag hjälpa dig med idag? 🎤', true);
     }
   }
@@ -371,7 +363,6 @@ class LilIVRChat {
       const result = await chrome.storage.session.get(['lilIVRNotification']);
       if (result.lilIVRNotification) {
         const notification = result.lilIVRNotification;
-        console.log('🎤 [POPUP] Found notification:', notification.message);
 
         // Add notification as bot message if not already in messages
         const lastMessage = this.messages[this.messages.length - 1];
@@ -383,7 +374,6 @@ class LilIVRChat {
         await chrome.storage.session.remove(['lilIVRNotification']);
       }
     } catch (error) {
-      console.error('🎤 [POPUP] Error checking notifications:', error);
     }
   }
 
