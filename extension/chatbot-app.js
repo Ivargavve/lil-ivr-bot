@@ -6,7 +6,6 @@
 
   // State management
   let isVisible = true;
-  let isMinimized = true; // Start minimized by default
   let messages = [];
   let isTyping = false;
   let isLoading = false;
@@ -49,69 +48,60 @@
   function updateChatbotUI() {
     if (!chatbotContainer) return;
 
-    if (isMinimized) {
-      chatbotContainer.innerHTML = `
-        <div class="chatbot-minimized" onclick="window.lilIvrToggleMinimize()">
-          <div class="profile-pic" style="width: 40px; height: 40px; font-size: 18px;">🎤</div>
-        </div>
-      `;
-    } else {
-      chatbotContainer.innerHTML = `
-        <div class="chatbot-expanded">
-          <div class="chatbot-header">
-            <div class="header-info">
-              <div class="header-profile-pic">🎤</div>
-              <div class="header-text">
-                <p class="bot-name">Lil IVR</p>
-                <p class="bot-status">🎤 Rapper & AI Assistant</p>
-              </div>
-            </div>
-            <div>
-              <button class="minimize-btn" onclick="window.lilIvrToggleMinimize()">−</button>
-              <button class="close-btn" onclick="window.lilIvrCloseChatbot()">×</button>
+    chatbotContainer.innerHTML = `
+      <div class="chatbot-expanded">
+        <div class="chatbot-header">
+          <div class="header-info">
+            <div class="header-profile-pic">🎤</div>
+            <div class="header-text">
+              <p class="bot-name">Lil IVR</p>
+              <p class="bot-status">🎤 Rapper & AI Assistant</p>
             </div>
           </div>
-
-          <div class="chat-messages" id="chat-messages">
-            ${renderMessages()}
-          </div>
-
-          <div class="chat-input-area">
-            <div class="chat-input-container">
-              <input
-                type="text"
-                id="chat-input"
-                placeholder="Skriv till Lil IVR..."
-                class="chat-input"
-                ${isLoading ? 'disabled' : ''}
-              />
-              <button
-                type="button"
-                class="send-btn"
-                onclick="window.lilIvrHandleSendMessage()"
-                ${isLoading ? 'disabled' : ''}
-              >➤</button>
-            </div>
+          <div>
+            <button class="close-btn" onclick="window.lilIvrCloseChatbot()">×</button>
           </div>
         </div>
-      `;
 
-      // Add enter key listener
-      const input = document.getElementById('chat-input');
-      if (input) {
-        input.addEventListener('keypress', function(e) {
-          if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            window.lilIvrHandleSendMessage();
-          }
-        });
+        <div class="chat-messages" id="chat-messages">
+          ${renderMessages()}
+        </div>
 
-        // Focus input when opening
-        setTimeout(() => input.focus(), 100);
-      }
+        <div class="chat-input-area">
+          <div class="chat-input-container">
+            <input
+              type="text"
+              id="chat-input"
+              placeholder="Skriv till Lil IVR..."
+              class="chat-input"
+              ${isLoading ? 'disabled' : ''}
+            />
+            <button
+              type="button"
+              class="send-btn"
+              onclick="window.lilIvrHandleSendMessage()"
+              ${isLoading ? 'disabled' : ''}
+            >➤</button>
+          </div>
+        </div>
+      </div>
+    `;
 
-      scrollToBottom();
+    // Add enter key listener
+    const input = document.getElementById('chat-input');
+    if (input) {
+      input.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          window.lilIvrHandleSendMessage();
+        }
+      });
+
+      // Focus input when opening
+      setTimeout(() => input.focus(), 100);
     }
+
+    scrollToBottom();
   }
 
   function renderMessages() {
@@ -292,30 +282,6 @@
     updateChatbotUI();
   }
 
-  function setMinimized(minimized) {
-    isMinimized = minimized;
-    updateChatbotUI();
-
-    // Send chat status to content script
-    window.postMessage({
-      type: 'LIL_IVR_CHAT_STATUS',
-      isOpen: !minimized && isVisible
-    }, '*');
-
-    // If opening chat, reset timer and clear notifications
-    if (!minimized) {
-      lastActiveTime = Date.now();
-      notificationSent = false;
-      hasUnreadNotification = false;
-      updateNotificationBadge();
-    }
-
-    // If opening chat for first time, send greeting
-    if (!minimized && !initialGreetingSent) {
-      setTimeout(() => analyzeWebpage(), 500);
-    }
-  }
-
   function setVisible(visible) {
     isVisible = visible;
     if (chatbotContainer) {
@@ -325,8 +291,21 @@
     // Send chat status to content script
     window.postMessage({
       type: 'LIL_IVR_CHAT_STATUS',
-      isOpen: !isMinimized && visible
+      isOpen: visible
     }, '*');
+
+    // If opening chat, reset timer and clear notifications
+    if (visible) {
+      lastActiveTime = Date.now();
+      notificationSent = false;
+      hasUnreadNotification = false;
+      updateNotificationBadge();
+    }
+
+    // If opening chat for first time, send greeting
+    if (visible && !initialGreetingSent) {
+      setTimeout(() => analyzeWebpage(), 500);
+    }
   }
 
   function setupProactiveMessaging() {
@@ -350,11 +329,9 @@
     window.addEventListener('message', (event) => {
       if (event.data.type === 'LIL_IVR_PROACTIVE_MESSAGE') {
         addMessage(event.data.message, true);
-        setMinimized(false);
         setVisible(true);
       } else if (event.data.type === 'LIL_IVR_OPEN_CHAT') {
         setVisible(true);
-        setMinimized(false);
       }
     });
 
@@ -364,7 +341,7 @@
       const inactiveTime = now - lastActiveTime;
 
       // Send notification after 10 minutes of inactivity (only once per cycle)
-      if (inactiveTime > 10 * 60 * 1000 && isMinimized && isPageVisible && !notificationSent) {
+      if (inactiveTime > 10 * 60 * 1000 && !isVisible && isPageVisible && !notificationSent) {
         showRandomMessage();
         notificationSent = true;
         hasUnreadNotification = true;
@@ -381,11 +358,11 @@
         popupTimer = null;
       }
 
-      if (hasUnreadNotification && isMinimized && isPageVisible) {
+      if (hasUnreadNotification && !isVisible && isPageVisible) {
         const randomDelay = (30 + Math.random() * 60) * 1000; // 30-90 seconds
 
         popupTimer = setTimeout(() => {
-          if (hasUnreadNotification && isMinimized && isPageVisible) {
+          if (hasUnreadNotification && !isVisible && isPageVisible) {
             showRandomMessage();
             scheduleNextPopup(); // Schedule the next one
           }
@@ -398,9 +375,9 @@
 
     // Reschedule when conditions change
     const popupInterval = setInterval(() => {
-      if (hasUnreadNotification && isMinimized && isPageVisible && !popupTimer) {
+      if (hasUnreadNotification && !isVisible && isPageVisible && !popupTimer) {
         scheduleNextPopup();
-      } else if ((!hasUnreadNotification || !isMinimized || !isPageVisible) && popupTimer) {
+      } else if ((!hasUnreadNotification || isVisible || !isPageVisible) && popupTimer) {
         clearTimeout(popupTimer);
         popupTimer = null;
       }
@@ -439,7 +416,6 @@
       if (response.ok) {
         const data = await response.json();
         addMessage(data.message, true);
-        setMinimized(false);
         setVisible(true);
       }
     } catch (error) {
@@ -447,11 +423,6 @@
   }
 
   // Global functions for UI interactions
-  window.lilIvrToggleMinimize = function() {
-    setMinimized(!isMinimized);
-    lastActiveTime = Date.now();
-  };
-
   window.lilIvrCloseChatbot = function() {
     setVisible(false);
     // Cleanup resources when closing
@@ -470,7 +441,6 @@
 
   window.lilIvrOpenChat = function() {
     setVisible(true);
-    setMinimized(false);
   };
 
   // Listen for messages from content script and background
@@ -478,10 +448,8 @@
 
     if (request.action === 'toggleChatbot' || request.action === 'openChat') {
       setVisible(true);
-      setMinimized(false);
     } else if (request.action === 'showProactiveMessage') {
       addMessage(request.message, true);
-      setMinimized(false);
       setVisible(true);
     }
 
