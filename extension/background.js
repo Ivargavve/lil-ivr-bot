@@ -18,11 +18,11 @@ let userState = {
 };
 
 function getRandomPopupInterval() {
-  return (Math.random() * 35 + 5) * 1000; // 5-40 seconds
+  return 30;
 }
 
 function getRandomExclamationInterval() {
-  return (Math.random() * 240 + 60) * 1000; // 60-300 seconds (1-5 minutes)
+  return 120;
 }
 
 const proactiveMessages = [
