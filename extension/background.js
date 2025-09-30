@@ -1,46 +1,30 @@
-// Lil IVR Bot Background Service Worker
-
-
-// Configuration
-// const API_BASE_URL = 'http://localhost:8000';
-// For production:
 const API_BASE_URL = 'https://lil-ivr-bot.onrender.com';
 
-// Store user activity and notification state
 let userState = {
   lastActiveTime: Date.now(),
   lastNotificationTime: 0,
   isActive: true,
-  popupOpen: false,  // Track if popup is open
-  lastPopupPing: 0,   // Track when popup last sent ping
+  popupOpen: false,
+  lastPopupPing: 0,
   hasUnreadNotification: false,
   notificationSent: false,
   isPageVisible: true,
-  lastPopupTime: Date.now(),   // Track when last popup was sent
-  lastChatMessage: Date.now(),  // Track when last chat message was sent
-  nextPopupTime: Date.now() + getRandomPopupInterval(), // Next scheduled popup time
-  lastChatOpened: Date.now(),   // Track when chat was last opened
-  nextExclamationTime: Date.now() + getRandomExclamationInterval(), // Next exclamation check (1-10 minutes)
-  lastExclamationMessage: null  // Store last message to detect new ones
+  lastPopupTime: Date.now(),
+  lastChatMessage: Date.now(),
+  nextPopupTime: Date.now() + getRandomPopupInterval(),
+  lastChatOpened: Date.now(),
+  nextExclamationTime: Date.now() + getRandomExclamationInterval(),
+  lastExclamationMessage: null
 };
 
-// Generate random interval between 10 seconds - 1 minute for popups
 function getRandomPopupInterval() {
-  const minSeconds = 10;
-  const maxSeconds = 1 * 60; // 1 minute in seconds
-  const randomSeconds = Math.floor(Math.random() * (maxSeconds - minSeconds + 1)) + minSeconds;
-  return randomSeconds * 1000; // Convert to milliseconds
+  return (Math.random() * 35 + 5) * 1000; // 5-40 seconds
 }
 
-// Generate random interval for exclamation checks (1-3 minutes)
 function getRandomExclamationInterval() {
-  const minMinutes = 1;
-  const maxMinutes = 3; // 3 minutes
-  const randomMinutes = Math.floor(Math.random() * (maxMinutes - minMinutes + 1)) + minMinutes;
-  return randomMinutes * 60 * 1000; // Convert to milliseconds
+  return (Math.random() * 240 + 60) * 1000; // 60-300 seconds (1-5 minutes)
 }
 
-// Proactive messages
 const proactiveMessages = [
   "Yo bror, vad händer? 🎤",
   "Har du glömt bort mig eller? 😢",
@@ -54,7 +38,6 @@ function getRandomProactiveMessage() {
   return proactiveMessages[Math.floor(Math.random() * proactiveMessages.length)];
 }
 
-// Listen for tab updates to track user activity
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status === 'complete') {
     userState.lastActiveTime = Date.now();
@@ -62,94 +45,73 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   }
 });
 
-// Listen for tab activation
 chrome.tabs.onActivated.addListener((activeInfo) => {
   userState.lastActiveTime = Date.now();
   userState.isActive = true;
 });
 
-// Main timer - check every second
 setInterval(() => {
   const now = Date.now();
 
-  // Check if popup has timed out (no ping for 3 seconds)
   if (userState.popupOpen && (now - userState.lastPopupPing > 3000)) {
     userState.popupOpen = false;
     broadcastToAllTabs({ action: 'popupStatusChanged', isOpen: false });
   }
 
-  // Send popups at random intervals ONLY if there's an unread notification (exclamation mark)
   if (!userState.popupOpen && userState.isPageVisible && userState.hasUnreadNotification && (now >= userState.nextPopupTime)) {
     const nextInterval = getRandomPopupInterval();
     sendPopupNotification();
     userState.lastPopupTime = now;
-    userState.nextPopupTime = now + nextInterval; // Schedule next popup
+    userState.nextPopupTime = now + nextInterval;
   }
 
-  // Check for new message from lil ivr and set exclamation mark (every 1-10 minutes, only when page visible and focused)
   if (!userState.popupOpen && userState.isPageVisible && (now >= userState.nextExclamationTime)) {
     checkForNewLilIvrMessage();
-    userState.nextExclamationTime = now + getRandomExclamationInterval(); // Next check in 1-10 minutes
+    userState.nextExclamationTime = now + getRandomExclamationInterval();
   }
 }, 1000);
 
-// Send popup notifications (every 10 seconds)
 async function sendPopupNotification() {
   try {
     const message = getRandomProactiveMessage();
-
-    // Send popup notification to all tabs
     await broadcastToAllTabs({
       action: 'showNotification',
       message: message
     });
-
   } catch (error) {
   }
 }
 
-// Send chat messages with song links (every 2 minutes)
 async function sendChatMessage() {
   try {
-    // Get random message from backend (includes song links)
     const response = await fetch(`${API_BASE_URL}/random-message`);
     if (response.ok) {
       const data = await response.json();
-
-      // Store the notification message for chat to show
       await chrome.storage.session.set({
         'lilIVRNotification': {
           message: data.message,
           timestamp: Date.now()
         }
       });
-
       userState.lastNotificationTime = Date.now();
     }
   } catch (error) {
   }
 }
 
-// New function to check for new messages from lil ivr
 async function checkForNewLilIvrMessage() {
   try {
-    // Get random message from backend (includes song links)
     const response = await fetch(`${API_BASE_URL}/random-message`);
     if (response.ok) {
       const data = await response.json();
-
-      // Always set unread notification when we get a message
       userState.lastExclamationMessage = data.message;
       userState.hasUnreadNotification = true;
-
-      // Store the notification message for chat to show
       await chrome.storage.session.set({
         'lilIVRNotification': {
           message: data.message,
           timestamp: Date.now()
         }
       });
-
       updateNotificationBadge();
     }
   } catch (error) {
