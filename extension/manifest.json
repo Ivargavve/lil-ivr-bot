@@ -16,6 +16,13 @@
   "background": {
     "service_worker": "background.js"
   },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["popup-notifications.js"],
+      "run_at": "document_end"
+    }
+  ],
   "icons": {
     "16": "assets/icon16.png",
     "48": "assets/icon48.png",
@@ -29,5 +36,11 @@
       "48": "assets/icon48.png",
       "128": "assets/icon128.png"
     }
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["assets/lilivr.jpg"],
+      "matches": ["http://*/*", "https://*/*"]
+    }
+  ]
 }

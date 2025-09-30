@@ -24,9 +24,9 @@ let userState = {
   lastExclamationMessage: null  // Store last message to detect new ones
 };
 
-// Generate random interval between 30 seconds - 1 minute for popups
+// Generate random interval between 10 seconds - 1 minute for popups
 function getRandomPopupInterval() {
-  const minSeconds = 30;
+  const minSeconds = 10;
   const maxSeconds = 1 * 60; // 1 minute in seconds
   const randomSeconds = Math.floor(Math.random() * (maxSeconds - minSeconds + 1)) + minSeconds;
   return randomSeconds * 1000; // Convert to milliseconds
@@ -138,22 +138,19 @@ async function checkForNewLilIvrMessage() {
     if (response.ok) {
       const data = await response.json();
 
-      // Check if this is a new message (different from last one)
-      if (userState.lastExclamationMessage !== data.message) {
-        userState.lastExclamationMessage = data.message;
-        userState.hasUnreadNotification = true;
+      // Always set unread notification when we get a message
+      userState.lastExclamationMessage = data.message;
+      userState.hasUnreadNotification = true;
 
-        // Store the notification message for chat to show
-        await chrome.storage.session.set({
-          'lilIVRNotification': {
-            message: data.message,
-            timestamp: Date.now()
-          }
-        });
+      // Store the notification message for chat to show
+      await chrome.storage.session.set({
+        'lilIVRNotification': {
+          message: data.message,
+          timestamp: Date.now()
+        }
+      });
 
-        updateNotificationBadge();
-      } else {
-      }
+      updateNotificationBadge();
     }
   } catch (error) {
   }

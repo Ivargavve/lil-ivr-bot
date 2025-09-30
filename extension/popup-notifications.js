@@ -114,7 +114,7 @@ async function showNotificationPopup(message) {
   popupContainer.addEventListener('mouseenter', () => {
     isHovering = true;
     popupContainer.style.opacity = '0.7';
-    popupContainer.style.transform = popupContainer.style.transform + ' scale(0.95)';
+    popupContainer.style.transform = 'scale(0.95)';
 
     // Clear auto-dismiss timer since user is interacting
     if (popupAutoDismissTimer) {
@@ -201,14 +201,12 @@ function removeNotificationPopup() {
       popupAutoDismissTimer = null;
     }
 
-    popupContainer.style.animation = 'slideOut 0.3s ease-in';
-    setTimeout(() => {
-      if (popupContainer && popupContainer.parentNode) {
-        popupContainer.parentNode.removeChild(popupContainer);
-      }
-      popupContainer = null;
-      isHovering = false;
-    }, 300);
+    // Remove immediately without animation to prevent multiple popups
+    if (popupContainer.parentNode) {
+      popupContainer.parentNode.removeChild(popupContainer);
+    }
+    popupContainer = null;
+    isHovering = false;
   }
 }
 
