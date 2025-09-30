@@ -97,6 +97,7 @@ jspm_packages/
 dist/
 *.crx
 *.pem
+*.zip
 
 # Testing
 testing/test_results/
