@@ -18,11 +18,15 @@ let userState = {
 };
 
 function getRandomPopupInterval() {
-  return 15000; // 15 seconds
+  const minMs = 5000; // 5 seconds
+  const maxMs = 30000; // 30 seconds
+  return Math.floor(Math.random() * (maxMs - minMs + 1)) + minMs;
 }
 
 function getRandomExclamationInterval() {
-  return 120000; // 120 seconds
+  const minMs = 60000; // 1 minute
+  const maxMs = 900000; // 15 minutes
+  return Math.floor(Math.random() * (maxMs - minMs + 1)) + minMs;
 }
 
 const proactiveMessages = [
@@ -50,26 +54,35 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
   userState.isActive = true;
 });
 
-setInterval(() => {
+// Use alarms for reliable timing even when service worker sleeps
+chrome.alarms.create('popupCheck', { periodInMinutes: 0.25 }); // Check every 15 seconds
+chrome.alarms.create('exclamationCheck', { periodInMinutes: 2 }); // Check every 2 minutes
+
+chrome.alarms.onAlarm.addListener((alarm) => {
   const now = Date.now();
 
-  if (userState.popupOpen && (now - userState.lastPopupPing > 3000)) {
-    userState.popupOpen = false;
-    broadcastToAllTabs({ action: 'popupStatusChanged', isOpen: false });
-  }
+  if (alarm.name === 'popupCheck') {
+    // Check if popup should close
+    if (userState.popupOpen && (now - userState.lastPopupPing > 3000)) {
+      userState.popupOpen = false;
+      broadcastToAllTabs({ action: 'popupStatusChanged', isOpen: false });
+    }
 
-  if (!userState.popupOpen && userState.isPageVisible && userState.hasUnreadNotification && (now >= userState.nextPopupTime)) {
-    const nextInterval = getRandomPopupInterval();
-    sendPopupNotification();
-    userState.lastPopupTime = now;
-    userState.nextPopupTime = now + nextInterval;
+    // Send popup notification if conditions are met
+    if (!userState.popupOpen && userState.isPageVisible && userState.hasUnreadNotification && (now >= userState.nextPopupTime)) {
+      const nextInterval = getRandomPopupInterval();
+      sendPopupNotification();
+      userState.lastPopupTime = now;
+      userState.nextPopupTime = now + nextInterval;
+    }
+  } else if (alarm.name === 'exclamationCheck') {
+    // Send exclamation message if conditions are met
+    if (!userState.popupOpen && userState.isPageVisible && (now >= userState.nextExclamationTime)) {
+      checkForNewLilIvrMessage();
+      userState.nextExclamationTime = now + getRandomExclamationInterval();
+    }
   }
-
-  if (!userState.popupOpen && userState.isPageVisible && (now >= userState.nextExclamationTime)) {
-    checkForNewLilIvrMessage();
-    userState.nextExclamationTime = now + getRandomExclamationInterval();
-  }
-}, 1000);
+});
 
 async function sendPopupNotification() {
   try {
