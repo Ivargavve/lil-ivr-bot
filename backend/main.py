@@ -6,6 +6,7 @@ from openai import OpenAI
 import os
 import random
 import re
+import requests
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -20,8 +21,39 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize OpenAI client
+# Initialize OpenAI client with web search capabilities
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+def search_web(query: str) -> str:
+    """Search the web using OpenAI's web search capability"""
+    try:
+        print(f"🔍 [WEB SEARCH] Searching web for: {query}")
+
+        # Use ChatGPT with web search enabled (gpt-4o model supports web browsing)
+        response = openai_client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "Du är en hjälpsam assistent som söker på webben och ger korta, faktiska svar. Svara ALLTID koncist på svenska om frågan är på svenska, annars på engelska. Ge 2-4 meningar med relevant fakta. Inkludera källa om möjligt."
+                },
+                {
+                    "role": "user",
+                    "content": f"Sök upp aktuell information på webben och svara på denna fråga: {query}"
+                }
+            ],
+            max_tokens=400,
+            temperature=0.3
+        )
+
+        answer = response.choices[0].message.content.strip()
+        print(f"🔍 [WEB SEARCH] Found: {answer[:150]}...")
+        return answer
+
+    except Exception as e:
+        print(f"🔍 [WEB SEARCH ERROR] {str(e)}")
+        return None
+
 
 class ConversationMessage(BaseModel):
     role: str  # 'user' or 'assistant'
@@ -74,7 +106,7 @@ BAKGRUND & PERSONLIGHET:
 SPRÅKSTIL & ORD DU ANVÄNDER:
 - Blanda svenska/engelska: "yo", "what's good", "mate"
 - Linköpingsslang: "asså", "typ", "fan", "shit", "fkn", "wtf", "bruh", "bas"
-- Festord: "öl", "kir", "ragga", "chilla", "hänga", "köra", "vin", "fulvin", "sprit", "vodka", "shots"
+- Festord: "öl", "kir", "haffa", "chilla", "hänga", "köra", "vin", "fulvin", "sprit", "vodka", "shots"
 - Musikord: "beats", "flow", "track", "studion", "cooking up", "bars", "freestyle", "cypher"
 - Kompisord: "grabben", "killen", "tjej", "brudar", "polare", "crew", "squad", "mannen"
 - Gamingord: "LoL", "League", "ranked", "guld", "plat", "diamond", "main", "carry", "feed", "noob", "pwn", "gg", "ez"
@@ -105,14 +137,11 @@ GAMING & HOBBIES:
 - Säger saker som "carriea min team" eller "de andra var noobs"
 - Gamingsetup i studion där han både spelar och gör musik
 - Competitive men blir sur när han förlorar
-- Andra spel: CS, FIFA, random indie games
+- Andra spel: CS, Battlefield, World of Tanks, Valheim, random indie games
 
 MUSIKKARRIÄR:
 - Gör egen musik nu efter Föset-tiden
-- Hänger i studion, producerar beats
 - Blandar svenska lyrics med engelsk vibe
-- Stolt över sitt sound och sin utveckling
-- Släpper på SoundCloud, vill komma upp på Spotify
 - Freestyle:ar ibland när han är full eller kåt
 
 PARTY & DRYCK:
@@ -421,7 +450,33 @@ async def chat(chat_message: ChatMessage):
 
         # Filter URLs from the message before processing
         filtered_message = filter_urls_from_text(chat_message.message)
-        user_message = filtered_message + context_prompt
+
+        # Check if user is asking a factual question that needs web search (Swedish focused)
+        search_indicators = [
+            'vad är', 'vad e', 'vad betyder', 'vadå', 'va är',
+            'vem är', 'vem e', 'vilka är', 'vilka e',
+            'var är', 'var e', 'var ligger', 'var finns',
+            'när är', 'när e', 'när var', 'när hände',
+            'hur är', 'hur e', 'hur fungerar', 'hur gör', 'hur många',
+            'varför är', 'varför e', 'varför kan', 'varför ska',
+            'vilken är', 'vilken e', 'vilket är', 'vilket e',
+            'berätta om', 'förklara', 'kan du förklara',
+            'vet du', 'känner du till', 'har du hört',
+            'what is', 'who is', 'where is', 'when', 'how', 'why'
+        ]
+        needs_web_search = any(indicator in filtered_message.lower() for indicator in search_indicators)
+
+        web_search_context = ""
+        if needs_web_search:
+            print(f"🔍 [TRIGGER] Detected question, performing web search...")
+            search_result = search_web(filtered_message)
+            if search_result:
+                web_search_context = f"\n\nWebbsökning resultat: {search_result}\n\nVIKTIGT: Använd denna aktuella information från webben för att ge ett smart, faktabaserat svar. Om du inte vet något specifikt i din kunskap, använd ALLTID denna webbsökning för att ge korrekt info. Svara i din Lil IVR-stil men var faktabaserad och informativ."
+                print(f"🔍 [SUCCESS] Web search completed")
+            else:
+                web_search_context = "\n\nOBS: Användaren ställer en faktafråga. Ge ett smart, faktabaserat svar baserat på din kunskap. Svara i din Lil IVR-stil men var informativ."
+
+        user_message = filtered_message + context_prompt + web_search_context
 
         # Check if user is specifically asking for lyrics/quotes
         asking_for_lyrics = any(word in filtered_message.lower() for word in

@@ -8,6 +8,12 @@ let popupsDisabled = false;
 let popupAutoDismissTimer = null;
 let isHovering = false;
 
+// Load popup settings from storage on script load
+chrome.storage.local.get(['popupNotificationsEnabled'], (result) => {
+  popupsDisabled = result.popupNotificationsEnabled === false;
+  console.log('🔔 Popup notifications enabled:', !popupsDisabled);
+});
+
 // Listen for messages from background script
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
@@ -16,6 +22,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     sendResponse({ success: true });
   } else if (request.action === 'disablePopups') {
     popupsDisabled = true;
+    sendResponse({ success: true });
+  } else if (request.action === 'updatePopupSettings') {
+    // Update local state when settings change
+    popupsDisabled = !request.enabled;
+    console.log('🔔 Popup notifications updated:', request.enabled);
     sendResponse({ success: true });
   } else if (request.action === 'popupStatusChanged') {
     isPopupOpen = request.isOpen;

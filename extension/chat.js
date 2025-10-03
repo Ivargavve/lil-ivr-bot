@@ -13,6 +13,10 @@ class LilIVRChat {
     this.messageInput = document.getElementById('messageInput');
     this.sendButton = document.getElementById('sendButton');
     this.loadingDiv = document.getElementById('loading');
+    this.settingsButton = document.getElementById('settingsButton');
+    this.settingsModal = document.getElementById('settingsModal');
+    this.closeSettingsButton = document.getElementById('closeSettingsButton');
+    this.popupToggle = document.getElementById('popupToggle');
 
     this.init();
   }
@@ -26,6 +30,9 @@ class LilIVRChat {
 
     // Check for pending notifications
     await this.checkForNotifications();
+
+    // Load popup settings
+    await this.loadPopupSettings();
 
     // Start sending ping messages to keep popup status alive
     this.pingInterval = setInterval(async () => {
@@ -77,6 +84,28 @@ class LilIVRChat {
     // Auto-resize and scroll
     this.messageInput.addEventListener('input', () => {
       this.scrollToBottom();
+    });
+
+    // Settings button
+    this.settingsButton.addEventListener('click', () => {
+      this.openSettings();
+    });
+
+    // Close settings button
+    this.closeSettingsButton.addEventListener('click', () => {
+      this.closeSettings();
+    });
+
+    // Close settings when clicking outside
+    this.settingsModal.addEventListener('click', (e) => {
+      if (e.target === this.settingsModal) {
+        this.closeSettings();
+      }
+    });
+
+    // Popup toggle
+    this.popupToggle.addEventListener('change', async () => {
+      await this.savePopupSettings();
     });
   }
 
@@ -388,6 +417,42 @@ class LilIVRChat {
   cleanup() {
     if (this.pingInterval) {
       clearInterval(this.pingInterval);
+    }
+  }
+
+  // Settings methods
+  openSettings() {
+    this.settingsModal.style.display = 'flex';
+  }
+
+  closeSettings() {
+    this.settingsModal.style.display = 'none';
+  }
+
+  async loadPopupSettings() {
+    try {
+      const result = await chrome.storage.local.get(['popupNotificationsEnabled']);
+      const enabled = result.popupNotificationsEnabled !== false; // Default to true
+      this.popupToggle.checked = enabled;
+    } catch (error) {
+      this.popupToggle.checked = true; // Default to enabled
+    }
+  }
+
+  async savePopupSettings() {
+    try {
+      const enabled = this.popupToggle.checked;
+      await chrome.storage.local.set({ popupNotificationsEnabled: enabled });
+
+      // Send message to background script to update notification settings
+      await chrome.runtime.sendMessage({
+        action: 'updatePopupSettings',
+        enabled: enabled
+      });
+
+      console.log('✅ Popup settings saved:', enabled);
+    } catch (error) {
+      console.error('Failed to save popup settings:', error);
     }
   }
 }

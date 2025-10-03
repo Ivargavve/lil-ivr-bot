@@ -14,6 +14,11 @@
   "host_permissions": [
     "https://lil-ivr-bot.onrender.com/*"
   ],
+  "permissions_description": {
+    "activeTab": "Tillägget behöver köra skript på webbsidor för att kunna extrahera relevant innehåll och integrera AI-funktionalitet direkt i användarens webbläsarupplevelse.",
+    "alarms": "För att schemalägga och hantera notifieringar",
+    "host_permissions": "Tillägget kommunicerar med lil-ivr-bot.onrender.com för att ansluta till den lokala backend-servern och få AI-svaren."
+  },
   "background": {
     "service_worker": "background.js"
   },

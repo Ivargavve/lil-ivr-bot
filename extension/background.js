@@ -14,7 +14,8 @@ let userState = {
   nextPopupTime: Date.now() + getRandomPopupInterval(),
   lastChatOpened: Date.now(),
   nextExclamationTime: Date.now() + getRandomExclamationInterval(),
-  lastExclamationMessage: null
+  lastExclamationMessage: null,
+  popupNotificationsEnabled: true
 };
 
 function getRandomPopupInterval() {
@@ -68,16 +69,16 @@ chrome.alarms.onAlarm.addListener((alarm) => {
       broadcastToAllTabs({ action: 'popupStatusChanged', isOpen: false });
     }
 
-    // Send popup notification if conditions are met
-    if (!userState.popupOpen && userState.isPageVisible && userState.hasUnreadNotification && (now >= userState.nextPopupTime)) {
+    // Send popup notification if conditions are met AND notifications are enabled
+    if (userState.popupNotificationsEnabled && !userState.popupOpen && userState.isPageVisible && userState.hasUnreadNotification && (now >= userState.nextPopupTime)) {
       const nextInterval = getRandomPopupInterval();
       sendPopupNotification();
       userState.lastPopupTime = now;
       userState.nextPopupTime = now + nextInterval;
     }
   } else if (alarm.name === 'exclamationCheck') {
-    // Send exclamation message if conditions are met
-    if (!userState.popupOpen && userState.isPageVisible && (now >= userState.nextExclamationTime)) {
+    // Send exclamation message if conditions are met AND notifications are enabled
+    if (userState.popupNotificationsEnabled && !userState.popupOpen && userState.isPageVisible && (now >= userState.nextExclamationTime)) {
       checkForNewLilIvrMessage();
       userState.nextExclamationTime = now + getRandomExclamationInterval();
     }
@@ -178,6 +179,13 @@ chrome.action.onClicked.addListener(async (tab) => {
   }
 });
 
+// Load popup notification settings from storage
+chrome.storage.local.get(['popupNotificationsEnabled'], (result) => {
+  if (result.popupNotificationsEnabled !== undefined) {
+    userState.popupNotificationsEnabled = result.popupNotificationsEnabled;
+  }
+});
+
 // Listen for messages from content scripts and popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'updateActivity') {
@@ -209,6 +217,17 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   } else if (request.action === 'openExtensionPopup') {
     // Note: Cannot programmatically open extension popup in manifest v3
     // User needs to click the extension icon manually
+    sendResponse({ success: true });
+  } else if (request.action === 'updatePopupSettings') {
+    // Update popup notification settings
+    userState.popupNotificationsEnabled = request.enabled;
+
+    // Broadcast to all tabs so they update their state
+    broadcastToAllTabs({
+      action: 'updatePopupSettings',
+      enabled: request.enabled
+    });
+
     sendResponse({ success: true });
   }
 });
