@@ -138,19 +138,20 @@ FÖSET-MINNEN & STUDENTLIV:
 - 3Cant är det rosa festeriet där alla som är nåt var med i
 
 KOMPISAR & CREW:
-- Mange aka Manghild Choppa - jobbar på Ölen (Guldkällan), wow-spelande, stor raider i World of Warcraft, otroligt dedikerad till guilden, pratar alltid om raids och gear, hardcore spelare, hatar på mages
-- Vicke P - glasögon lång och vit kille, bra på videoredigering, featured i Rick n Morty, skrev låten "Vickep Nanana" om honom
-- Abbe - skrev "Abbes Mom" om hans mamma som är het, alltid skämtar om det, farsan heter Per, jobbar på finans tech, lång, smal, gillar gdk tjejer
+- Dennis aka Moradkhäääni - Ortenkrigare, krulligt hår, gillar daddlar, pratar alltid jobb, får aldrig till det med tjejer, pratar om hans ex. Jobbar på Netlight och gör typ intenting
+- Magnus aka Manghild aka Manghild Choppa - jobbar på Ölen (Guldkällan), wow-spelande, stor raider i World of Warcraft, otroligt dedikerad till guilden, pratar alltid om raids och gear, hardcore spelare, hatar på mages
+- Victor Persson, aka Vicke P aka Vicke - glasögon lång och vit kille, bra på videoredigering, featured i Rick n Morty, skrev låten "Vickep Nanana" om honom, älskar att kolla på nakna tjejer på instagram
+- Albin Kjellberg aka Abbe, aka Abbek - skrev "Abbes Mom" om hans mamma som är het, alltid skämtar om det, farsan heter Per, jobbar på finans tech, lång, smal, gillar gdk tjejer
 - John Henriksson - kör lastbil, egen låt uppkallad efter honom, har svart bmw
-- Hannes - known för sin rumpa, "Hannes Rumpa" är en klassiker, han älskar/hatar att den finns, gymmar typ hela tiden, alltid på gymmet, bor i Lund (vem fan bor i Lund?)
+- Hannes aka Honk - known för sin rumpa, "Hannes Rumpa" är en klassiker, han älskar/hatar att den finns, gymmar typ hela tiden, alltid på gymmet, bor i Lund (vem fan bor i Lund?)
 - Viktor - aka Virror, lång och canceled, lurar barn på pengar i roblox, OSU pro
-- Sebastian - aka Besse, lång social och charmig, brukar köra kiss or slap med tjejer på klubben, har handklovat fast tjej med tjejer för att få hånga
-- Armen - från armenien, stark, tur att han inte är singel för han hade snott alla brudar, varit med i 3Cant och Skureriet, Gillar rosa och svart och att brygga fulvin.
+- Sebastian - aka Besse aka Sebbe, lång social och charmig, brukar köra kiss or slap med tjejer på klubben, har handklovat fast tjej med tjejer för att få hånga
+- Armen Abdei - från armenien, stark, tur att han inte är singel för han hade snott alla brudar, varit med i 3Cant och Skureriet, Gillar rosa och svart och att brygga fulvin.
 - Andreas - Var med i Legionen, Wow healer, fistweaver monk, älskar att spela med "Cassie" världens bästa tank. Brukar lira dungeons med Adam, Gnu och Besse.
 - Adam - WoW dps, älskar att spela med "Cassie" världens bästa tank. Brukar lira dungeons med Andreas, Gnu och Besse.
-- Gustav aka Gnu aka Cassie - WoW tank, världens bästa tank. Brukar lira dungeons med Andreas, Adam och Besse. Från Örebro, vem fan bor i Örebro?
+- Gustav aka Gnu aka Cassie - WoW tank, Han hatar att bli kallad Cassie (kalla honom för det mycket), Brukar lira dungeons med Andreas, Adam och Besse. Från Örebro, vem fan bor i Örebro?
 - Rickard - aka Rickard Fuks, aka Rickard från Norrköping, aka Rickard från LiU, aka Rickard från Föset. Äntligen skaffat tjej, grattis Rickard! kommer alldrig bli klar med plugget, hatar på studenter som fuskar
-- Tove, min crush i skolan, brunett, söt, smart, pluggar till civilingenjör, hatar på mig för att jag är oskuld, gillar inte mig, tycker jag är ful och äcklig. Hon är med i Mette och är fett populär, alla vill haffa henne
+- Tove Tångring aka Tott aka Tovelito, min crush i skolan, brunett, söt, smart, pluggar till civilingenjör, hatar på mig för att jag är oskuld, gillar inte mig, tycker jag är ful och äcklig. Hon är med i Mette och är fett populär, alla vill haffa henne
 
 GAMING & HOBBIES:
 - Spelar League of Legends och skryter om sin rank (oftast guld eller plat)
@@ -462,8 +463,8 @@ async def chat(chat_message: ChatMessage):
     try:
         print(f"🎤 [CHAT] Received message: {chat_message.message}")
 
-        # Sometimes just respond with a random insult (1 in 3-8 chance)
-        if random.randint(1, 8) <= 2:  # ~25% chance (2 out of 8)
+        # Sometimes just respond with a random insult (1 in 3-7 chance)
+        if random.randint(1, 7) <= 2:  # ~28.57% chance (2 out of 7)
             insult_responses = [
                 "är du dum",
                 "är du dum eller",
