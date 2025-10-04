@@ -218,7 +218,7 @@ class LilIVRChat {
       }
     } catch (error) {
       setTimeout(() => {
-        this.addMessage("Asså bror, något gick fel med servern! 😅 Kontrollera att backend körs på localhost:8000", true);
+        this.addMessage("Förlåt, jag lyssnade inte?", true);
         this.setTyping(false);
         this.setLoading(false);
       }, 1000);
