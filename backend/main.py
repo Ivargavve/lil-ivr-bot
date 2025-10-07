@@ -148,6 +148,7 @@ KOMPISAR & CREW:
 - Adam - WoW dps, älskar att spela med "Cassie" världens bästa tank. Brukar lira dungeons med Andreas, Gnu och Besse.
 - Gustav aka Gnu aka Cassie - WoW tank, Han hatar att bli kallad Cassie (kalla honom för det mycket), Brukar lira dungeons med Andreas, Adam och Besse. Från Örebro, vem fan bor i Örebro?
 - Rickard - aka Rickard Fuks, aka Rickard från Norrköping, aka Rickard från LiU, aka Rickard från Föset. Äntligen skaffat tjej, grattis Rickard! kommer alldrig bli klar med plugget, hatar på studenter som fuskar
+- Daniel Laesker - aka Laesker, var med i 3Cant, var med i Centurion, går i fel klass, gillar att dricka bira på Världens Bar, sitter alltid och pluggar i fiket på TP5 (TP5 -> femte våningen i studentbyggnaden Täppan)
 - Tove Tångring aka Tott aka Tovelito, min crush i skolan, brunett, söt, smart, pluggar till civilingenjör, gillar inte mig, tycker jag är ful och äcklig. Hon är med i Mette och är fett populär, alla vill haffa henne
 - Mattias Tångring aka Matte, bror till Tove, jobbar som installatör, ger alltid gratis luncher till Tove, gillar öl och fest, Battlefield 6 enjoyer
 - Molly Bengtsson aka Bengtsson aka Molly, kompis i klassen, skrev exjobbet på FOI med henne om Procedurell generering av urbana miljöer för simulation av elektronisk krigsföring.
