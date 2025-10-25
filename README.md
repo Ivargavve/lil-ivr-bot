@@ -2,6 +2,8 @@
 
 A Swedish chatbot Chrome extension powered by OpenAI GPT-4 mini.
 
+![Lil IVR Bot](assets/lil-ivr-bot.png)
+
 ## Functionality
 
 The extension provides a chatbot interface through a Chrome extension popup. Click the extension icon in the toolbar to open the chat interface. The bot communicates in Swedish with a rapper personality, using slang and occasionally sharing lyrics from fictional rap tracks stored in the backend.
