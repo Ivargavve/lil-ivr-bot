@@ -2,7 +2,7 @@
 
 A Swedish chatbot Chrome extension powered by OpenAI GPT-4 mini.
 
-![Lil IVR Bot](assets/lil-ivr-bot.png)
+![Lil IVR Bot](extension/assets/lil-ivr-bot.png)
 
 ## Functionality
 
